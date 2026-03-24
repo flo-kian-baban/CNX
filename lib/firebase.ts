@@ -2,8 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   initializeFirestore,
   getFirestore,
-  persistentLocalCache,
-  persistentSingleTabManager,
+  memoryLocalCache,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
@@ -52,7 +51,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 let db: ReturnType<typeof getFirestore>;
 try {
   db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
+    localCache: memoryLocalCache(),
   });
 } catch {
   // Already initialized (hot-reload) — just get the existing instance
