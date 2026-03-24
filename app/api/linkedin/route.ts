@@ -1,46 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer, { type Browser } from "puppeteer-core";
 
-export const maxDuration = 30; // Vercel hobby allows up to 60s
+export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
 // ─── Types ───────────────────────────────────────────────
 
-interface ScrapedExperience {
-  role: string;
+interface MappedExperience {
+  id: string;
   company: string;
-  dateRange: string;
-  description: string;
-  logo: string;
-}
-
-interface ScrapedProfile {
-  name: string;
-  headline: string;
-  about: string;
-  location: string;
-  profilePhoto: string;
-  experiences: ScrapedExperience[];
+  role: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
+  description?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
 
 const LINKEDIN_URL_REGEX = /^https?:\/\/(www\.)?linkedin\.com\/in\/([\w-]+)\/?.*$/i;
-
-const MONTH_MAP: Record<string, string> = {
-  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
-  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
-};
-
-function parseLinkedInDate(raw: string): string {
-  const parts = raw.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    const m = MONTH_MAP[parts[0].toLowerCase().slice(0, 3)] ?? "01";
-    return `${parts[parts.length - 1]}-${m}`;
-  }
-  if (parts.length === 1 && /^\d{4}$/.test(parts[0])) return `${parts[0]}-01`;
-  return "";
-}
 
 // ─── Browser Launch ──────────────────────────────────────
 
@@ -48,7 +26,6 @@ async function launchBrowser(): Promise<Browser> {
   const isDev = process.env.NODE_ENV === "development";
 
   if (isDev) {
-    // Local dev — use installed Chrome
     const paths: Record<string, string> = {
       darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
       win32: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -61,7 +38,6 @@ async function launchBrowser(): Promise<Browser> {
     });
   }
 
-  // Production (Vercel) — use @sparticuz/chromium
   const chromium = (await import("@sparticuz/chromium")).default;
   return puppeteer.launch({
     args: chromium.args,
@@ -71,193 +47,218 @@ async function launchBrowser(): Promise<Browser> {
   });
 }
 
-// ─── Page Scraping ───────────────────────────────────────
+// ─── Route Handler ───────────────────────────────────────
 
-async function scrapeProfile(url: string): Promise<ScrapedProfile> {
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const url = body?.url as string | undefined;
+
+  if (!url || !LINKEDIN_URL_REGEX.test(url.trim())) {
+    return NextResponse.json(
+      { error: "Invalid LinkedIn profile URL. Expected: https://www.linkedin.com/in/username" },
+      { status: 400 },
+    );
+  }
+
   let browser: Browser | null = null;
 
   try {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // Stealth: realistic browser fingerprint
+    // ── Stealth: pretend we're a real user coming from Google ──
     await page.setUserAgent(
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     );
-    await page.setViewport({ width: 1280, height: 900 });
+    await page.setExtraHTTPHeaders({
+      "Accept-Language": "en-US,en;q=0.9",
+      "Referer": "https://www.google.com/",
+    });
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
     });
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
-    // Give LinkedIn a moment to render
-    await new Promise((r) => setTimeout(r, 2500));
+    // Navigate to the profile
+    await page.goto(url.trim(), { waitUntil: "domcontentloaded", timeout: 15000 });
+    await new Promise((r) => setTimeout(r, 3000));
 
-    // ── Strategy 1: JSON-LD structured data (most reliable) ──
-    // ── Strategy 2: DOM selectors (public profile layout) ──
-    // ── Strategy 3: Meta tags (fallback — always present) ──
-    const data = await page.evaluate(() => {
-      // Helper
+    // Check if we landed on the auth wall
+    const currentUrl = page.url();
+    const isAuthWall = currentUrl.includes("/authwall") || currentUrl.includes("/login") || currentUrl.includes("/signup");
+
+    if (isAuthWall) {
+      // Auth wall blocked us — try navigating via Google referrer trick
+      // Go back to the profile URL with a clean referrer chain
+      await page.goto(`https://www.google.com/search?q=site:linkedin.com "${url.trim()}"`, {
+        waitUntil: "domcontentloaded",
+        timeout: 10000,
+      });
+      await new Promise((r) => setTimeout(r, 1000));
+      await page.goto(url.trim(), { waitUntil: "domcontentloaded", timeout: 15000 });
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+
+    // ── Extract data ──
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await page.evaluate(() => {
       const text = (sel: string) => document.querySelector(sel)?.textContent?.trim() ?? "";
-      const attr = (sel: string, a: string) => document.querySelector(sel)?.getAttribute(a) ?? "";
       const metaContent = (prop: string) =>
         document.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ??
         document.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") ?? "";
 
-      // ── JSON-LD ──
-      /* eslint-disable @typescript-eslint/no-explicit-any */
+      // ── JSON-LD (most reliable for name, photo, current company) ──
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let ld: any = null;
-      const ldScript = document.querySelector('script[type="application/ld+json"]');
-      if (ldScript?.textContent) {
-        try { ld = JSON.parse(ldScript.textContent); } catch { /* noop */ }
-      }
+      document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+        if (!script.textContent) return;
+        try {
+          const parsed = JSON.parse(script.textContent);
+          // Find the Person object (could be top-level or in @graph)
+          if (parsed["@type"] === "Person") ld = parsed;
+          if (Array.isArray(parsed["@graph"])) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const person = parsed["@graph"].find((item: any) => item["@type"] === "Person");
+            if (person) ld = person;
+          }
+        } catch { /* noop */ }
+      });
 
       // ── Name ──
       const name =
-        text(".top-card-layout__title") ||
-        text("h1") ||
+        text("h1.top-card-layout__title") ||
+        text(".pv-top-card--list li:first-child") ||
         ld?.name ||
-        metaContent("og:title")?.replace(/ [-–|].*/g, "").trim() ||
+        metaContent("og:title")?.replace(/\s*[-–|].*$/g, "").trim() ||
         "";
 
-      // ── Headline ──
+      // ── Headline / Title ──
       const headline =
+        text("h2.top-card-layout__headline") ||
         text(".top-card-layout__headline") ||
-        text(".top-card__subline-item") ||
         ld?.jobTitle ||
-        metaContent("og:description")?.split(" - ")?.[0]?.trim() ||
+        (() => {
+          // og:description often contains "Title at Company · Location"
+          const desc = metaContent("og:description");
+          if (desc) {
+            const match = desc.match(/^(.+?)\s*[·|·]\s*/);
+            return match ? match[1].trim() : desc.split(".")[0]?.trim() ?? "";
+          }
+          return "";
+        })() ||
         "";
 
       // ── About ──
       const about =
-        text(".summary .core-section-container__content p") ||
+        text("section.summary .core-section-container__content p") ||
         text("section.summary p") ||
+        text(".pv-about__summary-text") ||
         ld?.description ||
         "";
 
       // ── Location ──
       const location =
         text(".top-card__subline-item--bullet") ||
+        text(".top-card-layout__first-subline .top-card__subline-item:last-child") ||
         (ld?.address
           ? [ld.address.addressLocality, ld.address.addressRegion, ld.address.addressCountry]
-              .filter(Boolean)
-              .join(", ")
+              .filter(Boolean).join(", ")
           : "") ||
         "";
 
-      // ── Profile photo ──
-      const profilePhoto =
-        attr(".top-card-layout__entity-image", "src") ||
-        attr("img.profile-photo", "src") ||
-        attr(".top-card__profile-image", "src") ||
-        ld?.image?.contentUrl ||
-        metaContent("og:image") ||
-        "";
+      // ── Profile Photo ──
+      // IMPORTANT: We must get the user's actual photo, NOT the LinkedIn logo
+      const profilePhoto = (() => {
+        // JSON-LD is the best source — it's always the user's photo
+        if (ld?.image?.contentUrl) return ld.image.contentUrl;
+        if (typeof ld?.image === "string" && !ld.image.includes("logo")) return ld.image;
 
-      // ── Experiences ──
-      const experiences: { role: string; company: string; dateRange: string; description: string; logo: string }[] = [];
-
-      // Try standard public-profile selectors
-      document.querySelectorAll(".experience-item, .experience-group li, section#experience li").forEach((item) => {
-        const role =
-          item.querySelector(".experience-item__title, h3")?.textContent?.trim() ?? "";
-        const company =
-          item.querySelector(".experience-item__subtitle, h4, .experience-group-header__company")?.textContent?.trim() ?? "";
-        const dateRange =
-          item.querySelector(".experience-item__duration, .date-range, span.date-range")?.textContent?.trim() ?? "";
-        const desc =
-          item.querySelector(".experience-item__description, .show-more-less-text")?.textContent?.trim() ?? "";
-        const logo = item.querySelector("img")?.getAttribute("src") ?? "";
-
-        if (role || company) {
-          experiences.push({ role, company, dateRange, description: desc, logo });
+        // DOM: select the specific profile image element
+        const profileImg = document.querySelector("img.top-card-layout__entity-image") as HTMLImageElement | null;
+        if (profileImg?.src && !profileImg.src.includes("logo") && !profileImg.src.includes("static")) {
+          return profileImg.src;
         }
-      });
 
-      // Fallback: JSON-LD worksFor
-      if (experiences.length === 0 && ld?.worksFor) {
+        // og:image — but filter out LinkedIn's generic images
+        const ogImage = metaContent("og:image");
+        if (ogImage && !ogImage.includes("static.licdn.com/sc/h/") && !ogImage.includes("logo")) {
+          return ogImage;
+        }
+        return "";
+      })();
+
+      // ── Experiences from JSON-LD worksFor ──
+      // LinkedIn's guest view only provides current employer(s) via JSON-LD worksFor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const experiences: { role: string; company: string }[] = [];
+      if (ld?.worksFor) {
         const arr = Array.isArray(ld.worksFor) ? ld.worksFor : [ld.worksFor];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         arr.forEach((w: any) => {
-          experiences.push({
-            role: ld.jobTitle ?? "",
-            company: w?.name ?? "",
-            dateRange: "",
-            description: "",
-            logo: "",
-          });
+          const companyName = w?.name ?? "";
+          // Skip redacted entries (LinkedIn masks with *******)
+          if (companyName && !companyName.includes("*******")) {
+            experiences.push({
+              role: ld.jobTitle ?? "",
+              company: companyName,
+            });
+          }
         });
       }
-      /* eslint-enable @typescript-eslint/no-explicit-any */
+
+      // Also try DOM-based experience items (if the Discovery layout shows them)
+      document.querySelectorAll("li.experience-item, section#experience li, .experience-group__positions li").forEach((item) => {
+        const role = item.querySelector(".experience-item__title, h3")?.textContent?.trim() ?? "";
+        const company = item.querySelector(".experience-item__subtitle, h4")?.textContent?.trim() ?? "";
+        if ((role || company) && !role.includes("*******")) {
+          experiences.push({ role, company });
+        }
+      });
 
       return { name, headline, about, location, profilePhoto, experiences };
     });
 
-    return data;
-  } finally {
-    if (browser) await browser.close();
-  }
-}
+    // Don't return data from the auth wall page
+    const cleanName = (data.name ?? "").replace(/^Join LinkedIn.*$/i, "").trim();
+    const cleanHeadline = (data.headline ?? "").replace(/^Sign in.*$/i, "").trim();
 
-// ─── Route Handler ───────────────────────────────────────
+    const experiences: MappedExperience[] = (data.experiences ?? []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (exp: any, i: number) => ({
+        id: `li-${Date.now()}-${i}`,
+        company: exp.company ?? "",
+        role: exp.role ?? "",
+        startDate: "",
+        current: true,
+        description: undefined,
+      }),
+    );
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const url = body?.url as string | undefined;
+    const result = {
+      displayName: cleanName,
+      title: cleanHeadline,
+      bio: (data.about ?? "").replace(/[\*]{4,}/g, "").trim(),
+      location: data.location ?? "",
+      profileImage: data.profilePhoto ?? "",
+      experiences,
+      linkedinUrl: url.trim(),
+    };
 
-    if (!url || !LINKEDIN_URL_REGEX.test(url.trim())) {
+    // Verify we actually got useful data
+    if (!result.displayName && !result.title) {
       return NextResponse.json(
-        { error: "Invalid LinkedIn profile URL. Expected: https://www.linkedin.com/in/username" },
-        { status: 400 },
+        { error: "Could not extract profile data. LinkedIn may have blocked the request. Please try again in a moment." },
+        { status: 422 },
       );
     }
 
-    const profile = await scrapeProfile(url.trim());
-
-    // Map experiences to our card format
-    const experiences = profile.experiences.map((exp, i) => {
-      let startDate = "";
-      let endDate: string | undefined;
-      let current = false;
-
-      if (exp.dateRange) {
-        const halves = exp.dateRange.split(/\s*[-–]\s*/);
-        if (halves[0]) startDate = parseLinkedInDate(halves[0]);
-        if (halves[1]) {
-          if (halves[1].toLowerCase().includes("present")) {
-            current = true;
-          } else {
-            endDate = parseLinkedInDate(halves[1]);
-          }
-        }
-      }
-
-      return {
-        id: `li-${Date.now()}-${i}`,
-        company: exp.company,
-        role: exp.role,
-        startDate,
-        endDate,
-        current,
-        description: exp.description || undefined,
-        companyLogo: exp.logo || undefined,
-      };
-    });
-
-    return NextResponse.json({
-      displayName: profile.name,
-      title: profile.headline,
-      bio: profile.about,
-      location: profile.location,
-      profileImage: profile.profilePhoto,
-      experiences,
-      linkedinUrl: url.trim(),
-    });
+    return NextResponse.json(result);
   } catch (err) {
     console.error("[LinkedIn Scraper] Error:", err);
     return NextResponse.json(
-      { error: "Failed to scrape LinkedIn profile. The page may be restricted or loading slowly. Please try again." },
+      { error: "Failed to scrape LinkedIn profile. Please try again." },
       { status: 500 },
     );
+  } finally {
+    if (browser) await browser.close();
   }
 }
