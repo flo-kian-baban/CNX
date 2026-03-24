@@ -2,7 +2,6 @@ import {
   doc,
   setDoc,
   getDoc,
-  getDocFromServer,
   deleteDoc,
   serverTimestamp,
   runTransaction,
@@ -94,7 +93,7 @@ export async function updateBusinessCard(
  * Returns `null` if no card exists yet or is malformed.
  */
 export async function getBusinessCard(uid: string): Promise<BusinessCard | null> {
-  const snapshot = await getDocFromServer(doc(db, "users", uid, "profile", "card"));
+  const snapshot = await getDoc(doc(db, "users", uid, "profile", "card"));
   if (!snapshot.exists()) return null;
   const data = snapshot.data();
   if (!data || typeof data.displayName !== "string") return null;
@@ -160,7 +159,7 @@ export async function deleteSlug(slug: string, userId?: string): Promise<void> {
  * or `null` if the slug is not claimed.
  */
 export async function getSlugOwner(slug: string): Promise<string | null> {
-  const snapshot = await getDocFromServer(doc(db, "slugs", slug));
+  const snapshot = await getDoc(doc(db, "slugs", slug));
   if (!snapshot.exists()) return null;
   const data = snapshot.data();
   return typeof data?.userId === "string" ? data.userId : null;
