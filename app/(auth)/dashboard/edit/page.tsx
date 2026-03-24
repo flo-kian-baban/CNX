@@ -564,6 +564,7 @@ function EditCardContent() {
                           bio: data.bio || prev.bio,
                           location: data.location || prev.location,
                           profileImage: data.profileImage || prev.profileImage,
+                          bannerImage: data.bannerImage || prev.bannerImage,
                           experience: data.experiences?.length ? data.experiences : prev.experience,
                           socialLinks: {
                             ...prev.socialLinks,
@@ -576,6 +577,7 @@ function EditCardContent() {
                         if (data.title) imported.push("title");
                         if (data.bio) imported.push("bio");
                         if (data.location) imported.push("location");
+                        if (data.bannerImage) imported.push("banner");
                         if (data.experiences?.length) imported.push(`${data.experiences.length} experiences`);
                         showToast(`Imported: ${imported.join(", ")}`, "success");
                       } catch (err) {

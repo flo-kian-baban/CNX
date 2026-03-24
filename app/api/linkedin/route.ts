@@ -185,6 +185,30 @@ export async function POST(req: NextRequest) {
         return "";
       })();
 
+      // ── Banner / Cover Image ──
+      const bannerImage = (() => {
+        // LinkedIn banner is in the profile header background
+        const coverImg = document.querySelector(
+          ".cover-img__image, .profile-background-image img, .top-card-layout__bg-img img, img[data-ghost-classes='artdeco-ghost-image']"
+        );
+        const coverSrc = coverImg?.getAttribute("src") ?? "";
+        if (coverSrc && !coverSrc.includes("static.licdn.com/sc/h/")) {
+          return coverSrc;
+        }
+        // Try background-image CSS on the cover container
+        const coverDiv = document.querySelector(
+          ".cover-img, .profile-background-image, .top-card-layout__bg-img"
+        );
+        if (coverDiv) {
+          const bgImage = getComputedStyle(coverDiv).backgroundImage;
+          const bgMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
+          if (bgMatch?.[1] && !bgMatch[1].includes("static.licdn.com/sc/h/")) {
+            return bgMatch[1];
+          }
+        }
+        return "";
+      })();
+
       // ── Experiences from JSON-LD worksFor ──
       // LinkedIn's guest view only provides current employer(s) via JSON-LD worksFor
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -213,7 +237,7 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      return { name, headline, about, location, profilePhoto, experiences };
+      return { name, headline, about, location, profilePhoto, bannerImage, experiences };
     });
 
     // Safely coerce all values to strings
@@ -222,6 +246,7 @@ export async function POST(req: NextRequest) {
     const rawAbout = String(data.about ?? "").replace(/[\*]{3,}/g, "").trim();
     const rawLocation = String(data.location ?? "");
     const rawPhoto = String(data.profilePhoto ?? "");
+    const rawBanner = String(data.bannerImage ?? "");
 
     // Don't return data from the auth wall page
     const cleanName = rawName.replace(/^Join LinkedIn.*$/i, "").trim();
@@ -251,6 +276,7 @@ export async function POST(req: NextRequest) {
       bio: rawAbout.replace(/<[^>]*>/g, "\n").replace(/[\*]{4,}/g, "").trim(),
       location: rawLocation,
       profileImage: rawPhoto,
+      bannerImage: rawBanner || undefined,
       experiences,
       linkedinUrl: url.trim(),
     };
