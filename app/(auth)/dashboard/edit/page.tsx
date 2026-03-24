@@ -208,6 +208,9 @@ function EditCardContent() {
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set());
   const [showWelcome, setShowWelcome] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [linkedinError, setLinkedinError] = useState("");
 
   const originalSlugRef = useRef<string>("");
   const isNewCardRef = useRef<boolean>(true);
@@ -515,6 +518,91 @@ function EditCardContent() {
                   style={{ width: `${completeness}%` }}/>
               </div>
             </div>
+
+            {/* ── Section: LinkedIn Import ── */}
+            <section>
+              <SectionHeading title="Quick Import" />
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A66C2]/15 text-[#0A66C2]">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">Import from LinkedIn</p>
+                    <p className="text-xs text-gray-500">Paste your profile URL to auto-fill your card</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={(e) => { setLinkedinUrl(e.target.value); setLinkedinError(""); }}
+                    placeholder="https://www.linkedin.com/in/your-name"
+                    className="form-input flex-1 text-sm"
+                    disabled={linkedinLoading}
+                  />
+                  <button
+                    type="button"
+                    disabled={linkedinLoading || !linkedinUrl.trim()}
+                    onClick={async () => {
+                      setLinkedinLoading(true);
+                      setLinkedinError("");
+                      try {
+                        const res = await fetch("/api/linkedin", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ url: linkedinUrl.trim() }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || "Failed to import");
+
+                        // Populate form fields
+                        setForm((prev) => ({
+                          ...prev,
+                          displayName: data.displayName || prev.displayName,
+                          title: data.title || prev.title,
+                          bio: data.bio || prev.bio,
+                          location: data.location || prev.location,
+                          profileImage: data.profileImage || prev.profileImage,
+                          experience: data.experiences?.length ? data.experiences : prev.experience,
+                          socialLinks: {
+                            ...prev.socialLinks,
+                            linkedin: data.linkedinUrl || prev.socialLinks.linkedin,
+                          },
+                        }));
+
+                        const imported: string[] = [];
+                        if (data.displayName) imported.push("name");
+                        if (data.title) imported.push("title");
+                        if (data.bio) imported.push("bio");
+                        if (data.location) imported.push("location");
+                        if (data.experiences?.length) imported.push(`${data.experiences.length} experiences`);
+                        showToast(`Imported: ${imported.join(", ")}`, "success");
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : "Import failed";
+                        setLinkedinError(msg);
+                        showToast(msg, "error");
+                      } finally {
+                        setLinkedinLoading(false);
+                      }
+                    }}
+                    className="flex items-center gap-2 rounded-xl bg-[#0A66C2] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#004182] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {linkedinLoading ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Importing…
+                      </>
+                    ) : (
+                      "Import"
+                    )}
+                  </button>
+                </div>
+                {linkedinError && (
+                  <p className="mt-2 text-xs text-red-400">{linkedinError}</p>
+                )}
+              </div>
+            </section>
 
             {/* ── Section: Profile ── */}
             <section>
