@@ -428,7 +428,7 @@ function EditCardContent() {
       <div className="min-h-screen bg-gray-950 pb-20">
         <nav className="sticky top-0 z-30 border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-indigo-500">.</span></h1>
+            <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-[#F15928]">.</span></h1>
             <div className="h-7 w-20 animate-pulse rounded-lg bg-white/5" />
           </div>
         </nav>
@@ -462,7 +462,7 @@ function EditCardContent() {
       {/* Nav */}
       <nav className="sticky top-0 z-30 border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-indigo-500">.</span></h1>
+          <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-[#F15928]">.</span></h1>
           <div className="flex items-center gap-3">
             {sharePath && (
               <a href={sharePath} target="_blank" rel="noopener noreferrer"
@@ -475,7 +475,7 @@ function EditCardContent() {
             </Link>
             {user?.photoURL && (
               <Image src={user.photoURL} alt={user.displayName ?? "User"} width={28} height={28}
-                className="rounded-full ring-2 ring-indigo-500/50" referrerPolicy="no-referrer" unoptimized />
+                className="rounded-full ring-2 ring-[#F15928]/50" referrerPolicy="no-referrer" unoptimized />
             )}
             <button onClick={logout}
               className="rounded-lg border border-white/10 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:border-white/20 hover:bg-white/5 hover:text-white">
@@ -488,10 +488,10 @@ function EditCardContent() {
       <main className="card-enter mx-auto max-w-7xl px-6 py-10">
         {/* Welcome banner */}
         {showWelcome && (
-          <div className="mb-6 flex items-center justify-between rounded-2xl border border-indigo-500/20 bg-indigo-900/30 px-6 py-4">
-            <p className="text-sm font-medium text-indigo-400">Welcome to CNX — let&apos;s set up your card.</p>
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#F15928]/20 bg-[#F15928]/10 px-6 py-4">
+            <p className="text-sm font-medium text-[#F15928]">Welcome to CNX — let&apos;s set up your card.</p>
             <button onClick={() => { setShowWelcome(false); localStorage.setItem("cnx-welcome-dismissed", "1"); }}
-              className="text-indigo-400/60 hover:text-indigo-400"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+              className="text-[#F15928]/60 hover:text-[#F15928]"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
           </div>
         )}
@@ -503,12 +503,12 @@ function EditCardContent() {
             <div className="rounded-xl border border-white/10 bg-white/5 p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-300">
-                  Card <span className={completeness === 100 ? "text-emerald-400" : "text-indigo-400"}>{completeness}%</span> complete
+                  Card <span className={completeness === 100 ? "text-emerald-400" : "text-[#F15928]"}>{completeness}%</span> complete
                   {completeness === 100 && <span className="ml-2 text-emerald-400">✓</span>}
                 </p>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className={`h-full rounded-full transition-all duration-500 ${completeness === 100 ? "bg-emerald-500" : "bg-indigo-500"}`}
+                <div className={`h-full rounded-full transition-all duration-500 ${completeness === 100 ? "bg-emerald-500" : "bg-[#F15928]"}`}
                   style={{ width: `${completeness}%` }}/>
               </div>
             </div>
@@ -522,10 +522,10 @@ function EditCardContent() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-300">Banner Image</label>
                   <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBannerUpload}/>
                   <button type="button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingBanner}
-                    className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 transition-colors hover:border-indigo-500/50"
+                    className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 transition-colors hover:border-[#F15928]/50"
                     style={form.bannerImage ? { backgroundImage: `url(${form.bannerImage})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}>
                     {uploadingBanner ? (
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-600 border-t-indigo-500"/>
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-600 border-t-[#F15928]"/>
                     ) : !form.bannerImage ? (
                       <div className="flex flex-col items-center gap-1 text-gray-500">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z"/></svg>
@@ -540,13 +540,13 @@ function EditCardContent() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-300">Profile Photo</label>
                   <input ref={profileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleProfileUpload}/>
                   <button type="button" onClick={() => profileInputRef.current?.click()} disabled={uploadingProfile}
-                    className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-white/20 transition-colors hover:border-indigo-500/50">
+                    className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-white/20 transition-colors hover:border-[#F15928]/50">
                     {form.profileImage ? (
                       <img src={form.profileImage} alt="Profile" className="h-full w-full rounded-full object-cover"/>
                     ) : (
                       <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
                     )}
-                    {uploadingProfile && <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60"><div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-600 border-t-indigo-500"/></div>}
+                    {uploadingProfile && <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60"><div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-600 border-t-[#F15928]"/></div>}
                   </button>
                 </div>
 
@@ -597,10 +597,10 @@ function EditCardContent() {
                   const isExpanded = expandedPlatforms.has(p);
                   const hasValue = !!form.socialLinks[p];
                   return (
-                    <div key={p} className={`rounded-xl px-3 py-2.5 transition-colors ${isExpanded || hasValue ? "bg-indigo-500/10" : ""}`}>
+                    <div key={p} className={`rounded-xl px-3 py-2.5 transition-colors ${isExpanded || hasValue ? "bg-[#F15928]/10" : ""}`}>
                       <button type="button" onClick={() => togglePlatform(p)}
                         className="flex w-full items-center gap-3 text-left">
-                        <span className={`${hasValue ? "text-indigo-400" : "text-gray-500"}`}><PlatformIcon platform={p}/></span>
+                        <span className={`${hasValue ? "text-[#F15928]" : "text-gray-500"}`}><PlatformIcon platform={p}/></span>
                         <span className={`text-sm font-medium ${hasValue ? "text-white" : "text-gray-400"}`}>{PLATFORM_LABELS[p]}</span>
                         <svg className={`ml-auto h-3.5 w-3.5 text-gray-600 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                           fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -625,7 +625,7 @@ function EditCardContent() {
                 <div className="mb-3 flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-300">Custom Links</label>
                   <button type="button" onClick={addLink}
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-indigo-500/40 hover:text-indigo-400">
+                    className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-[#F15928]/40 hover:text-[#F15928]">
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Add Link
                   </button>
@@ -671,7 +671,7 @@ function EditCardContent() {
                   setForm((prev) => ({ ...prev, experience: [...prev.experience, {
                     id: Date.now().toString(), company: "", role: "", startDate: "", current: false,
                   }] }));
-                }} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-indigo-500/40 hover:text-indigo-400">
+                }} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-[#F15928]/40 hover:text-[#F15928]">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                   Add Experience
                 </button>
@@ -759,11 +759,11 @@ function EditCardContent() {
                 <FieldGroup label="Slug" htmlFor="slug" error={errors.slug}>
                   <input id="slug" type="text" value={form.slug} onChange={(e) => updateField("slug", e.target.value.toLowerCase())}
                     placeholder="jane-smith" className={`form-input ${errors.slug ? "ring-red-500/50" : ""}`}/>
-                  <p className="mt-1.5 text-xs text-gray-500">cnx.app/c/<span className="text-indigo-400">{form.slug.trim() || "your-slug"}</span></p>
+                  <p className="mt-1.5 text-xs text-gray-500">cnx.app/c/<span className="text-[#F15928]">{form.slug.trim() || "your-slug"}</span></p>
                 </FieldGroup>
                 {shareUrl && (
                   <button onClick={handleDownloadQR} type="button"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-indigo-500/30 hover:bg-indigo-500/10 hover:text-white">
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-[#F15928]/30 hover:bg-[#F15928]/10 hover:text-white">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 14.625v2.25m0 3v.75m3-3h.75m-6 0h.75m5.25-3v.75m0 3.75v.75m-3-6h3" />
@@ -858,7 +858,7 @@ function EditCardContent() {
             <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse-dot"/><span className="text-amber-400/80">Unsaved changes</span>
           </div>
           <button type="button" onClick={handleSave} disabled={saving}
-            className="rounded-xl bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
+            className="rounded-xl bg-[#F15928] px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#d94d22] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? "Saving…" : "Save Card"}
           </button>
         </div>
@@ -873,7 +873,7 @@ function EditCardContent() {
 // ─────────────────────────────────────────────
 
 function SectionHeading({ title }: { title: string }) {
-  return <h2 className="border-l-2 border-indigo-500 pl-3 text-xs font-semibold uppercase tracking-widest text-gray-500">{title}</h2>;
+  return <h2 className="border-l-2 border-[#F15928] pl-3 text-xs font-semibold uppercase tracking-widest text-gray-500">{title}</h2>;
 }
 
 function FieldGroup({ label, htmlFor, required, error, children }: {

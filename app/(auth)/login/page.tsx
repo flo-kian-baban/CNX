@@ -32,7 +32,7 @@ export default function LoginPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-950">
         <div className="flex flex-col items-center gap-4" role="status" aria-label="Loading">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-700 border-t-indigo-500" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-700 border-t-[#F15928]" />
         </div>
       </div>
     );
@@ -131,8 +131,8 @@ export default function LoginPage() {
       }}
     >
       {/* Background gradient blobs */}
-      <div className="pointer-events-none absolute -top-48 left-1/2 h-[800px] w-[800px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[160px]" />
-      <div className="pointer-events-none absolute -bottom-48 right-1/4 h-[600px] w-[600px] rounded-full bg-violet-600/15 blur-[140px]" />
+      <div className="pointer-events-none absolute -top-48 left-1/2 h-[800px] w-[800px] -translate-x-1/2 rounded-full bg-[#F15928]/20 blur-[160px]" />
+      <div className="pointer-events-none absolute -bottom-48 right-1/4 h-[600px] w-[600px] rounded-full bg-[#F15928]/15 blur-[140px]" />
 
       {/* Login card — gradient border wrapper */}
       <div className="card-enter relative z-10 mx-4 w-full max-w-md rounded-2xl bg-gradient-to-br from-white/20 via-white/5 to-white/10 p-[1px]">
@@ -140,7 +140,7 @@ export default function LoginPage() {
           {/* Brand mark */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-black tracking-widest text-white">
-              CNX<span className="text-indigo-500">.</span>
+              CNX<span className="text-[#F15928]">.</span>
             </h1>
             <p className="mt-2 text-sm italic text-gray-400">
               Your digital identity.
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 disabled={signingIn}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 disabled:opacity-50"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#F15928]/50 focus:ring-1 focus:ring-[#F15928]/30 disabled:opacity-50"
               />
             </div>
 
@@ -183,7 +183,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete={isSignUp ? "new-password" : "current-password"}
                   disabled={signingIn}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-11 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-11 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#F15928]/50 focus:ring-1 focus:ring-[#F15928]/30 disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -219,7 +219,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="new-password"
                   disabled={signingIn}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#F15928]/50 focus:ring-1 focus:ring-[#F15928]/30 disabled:opacity-50"
                 />
               </div>
             )}
@@ -228,7 +228,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={signingIn}
-              className="w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-indigo-500 hover:shadow-indigo-500/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-[#F15928] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:bg-[#d94d22] hover:shadow-[#F15928]/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {signingIn ? (
                 <span className="flex items-center justify-center gap-2">
@@ -249,7 +249,7 @@ export default function LoginPage() {
                 setError(null);
                 setConfirmPassword("");
               }}
-              className="font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+              className="font-medium text-[#F15928] transition-colors hover:text-[#d94d22]"
             >
               {isSignUp ? "Sign in" : "Sign up"}
             </button>
@@ -314,7 +314,7 @@ export default function LoginPage() {
             By signing in, you agree to our{" "}
             <button
               type="button"
-              className="text-indigo-400 hover:text-indigo-300"
+              className="text-[#F15928] hover:text-[#d94d22]"
               tabIndex={0}
             >
               Terms of Service
@@ -322,7 +322,7 @@ export default function LoginPage() {
             and{" "}
             <button
               type="button"
-              className="text-indigo-400 hover:text-indigo-300"
+              className="text-[#F15928] hover:text-[#d94d22]"
               tabIndex={0}
             >
               Privacy Policy

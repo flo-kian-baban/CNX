@@ -366,7 +366,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         {/* ── 8. Footer ── */}
         <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "mt-6 pb-6"}`}>
           Powered by{" "}
-          <a href="/" className="font-medium text-gray-500 transition-colors hover:text-indigo-400">
+          <a href="/" className="font-medium text-gray-500 transition-colors hover:text-[#F15928]">
             CNX
           </a>
         </p>

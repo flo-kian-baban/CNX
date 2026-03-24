@@ -128,7 +128,7 @@ function DashboardContent() {
       {/* Nav */}
       <nav className="border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-indigo-500">.</span></h1>
+          <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-[#F15928]">.</span></h1>
           <div className="flex items-center gap-4">
             {user?.photoURL && (
               <Image
@@ -136,7 +136,7 @@ function DashboardContent() {
                 alt={user.displayName ?? "User"}
                 width={32}
                 height={32}
-                className="rounded-full ring-2 ring-indigo-500/50"
+                className="rounded-full ring-2 ring-[#F15928]/50"
                 referrerPolicy="no-referrer"
                 unoptimized
               />
@@ -176,7 +176,7 @@ function DashboardContent() {
                 <div>
                   <p className="text-sm font-medium text-white">Your card is live</p>
                   <div className="mt-0.5 flex gap-3 text-xs">
-                    <Link href="/dashboard/edit" className="text-indigo-400 hover:text-indigo-300">Edit card</Link>
+                    <Link href="/dashboard/edit" className="text-[#F15928] hover:text-[#d94d22]">Edit card</Link>
                     <a href={sharePath} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">View public card ↗</a>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ function DashboardContent() {
             ) : (
               <div>
                 <p className="text-sm font-medium text-white">No card yet</p>
-                <Link href="/dashboard/edit" className="mt-0.5 text-xs text-indigo-400 hover:text-indigo-300">Set up your card →</Link>
+                <Link href="/dashboard/edit" className="mt-0.5 text-xs text-[#F15928] hover:text-[#d94d22]">Set up your card →</Link>
               </div>
             )}
           </div>
@@ -193,8 +193,8 @@ function DashboardContent() {
         {/* ── Dashboard grid ── */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Profile card */}
-          <div className="group rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-indigo-500/30 hover:bg-white/[0.07]">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+          <div className="group rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-[#F15928]/30 hover:bg-white/[0.07]">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#F15928]/10 text-[#F15928]">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
               </svg>
@@ -204,9 +204,9 @@ function DashboardContent() {
           </div>
 
           {/* Business Card tile */}
-          <div className="group rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-violet-500/30 hover:bg-white/[0.07]">
+          <div className="group rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:border-[#F15928]/30 hover:bg-white/[0.07]">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F15928]/10 text-[#F15928]">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                 </svg>
@@ -225,7 +225,7 @@ function DashboardContent() {
             </p>
             <Link
               href="/dashboard/edit"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-violet-400 transition-colors hover:text-violet-300"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#F15928] transition-colors hover:text-[#d94d22]"
             >
               {hasCard ? "Edit Card" : "Set up Card"}
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -276,7 +276,7 @@ function DashboardContent() {
                     className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                       copied
                         ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"
-                        : "bg-indigo-600 text-white shadow-lg hover:bg-indigo-500"
+                        : "bg-[#F15928] text-white shadow-lg hover:bg-[#d94d22]"
                     }`}
                   >
                     {copied ? "Copied!" : "Copy link"}
