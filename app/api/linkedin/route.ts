@@ -228,13 +228,6 @@ export async function POST(req: NextRequest) {
         const ogImage = metaContent("og:image");
         if (ogImage && !isGenericImg(ogImage)) return ogImage;
 
-        // Look for any actual profile photo with media.licdn.com domain
-        const allImgs = document.querySelectorAll("img[src*='media.licdn.com'][src*='displayphoto']");
-        for (const img of allImgs) {
-          const src = img.getAttribute("src") ?? "";
-          if (src && !isGenericImg(src)) return src;
-        }
-
         return "";
       })();
 
