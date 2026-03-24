@@ -170,7 +170,15 @@ export async function POST(req: NextRequest) {
         const desc = metaContent("og:description");
         if (desc && !isRedacted(desc)) {
           const match = desc.match(/^(.+?)\s*[·|·]\s*/);
-          headline = match ? match[1].trim() : (desc.split(".")[0]?.trim() ?? "");
+          if (match) {
+            const candidate = match[1].trim();
+            // Don't use it if it looks like a location (e.g. "Richmond Hill, Ontario, Canada")
+            const looksLikeLocation = /,\s*(Canada|United States|UK|Australia|India|[A-Z]{2})\s*$/i.test(candidate)
+              || /^\w[\w\s]+,\s+\w[\w\s]+,\s+\w/i.test(candidate);
+            if (!looksLikeLocation) {
+              headline = candidate;
+            }
+          }
         }
       }
 
@@ -193,23 +201,40 @@ export async function POST(req: NextRequest) {
         "";
 
       // ── Profile Photo ──
-      // IMPORTANT: We must get the user's actual photo, NOT the LinkedIn logo
+      // IMPORTANT: We must get the user's ACTUAL photo, NOT the LinkedIn placeholder
       const profilePhoto = (() => {
+        // Filter out LinkedIn's default/generic avatar images
+        const isGenericImg = (url: string) =>
+          !url ||
+          url.includes("static.licdn.com") ||
+          url.includes("/aero-v1/") ||
+          url.includes("/nav/") ||
+          url.includes("logo") ||
+          url.includes("ghost-person") ||
+          url.includes("default-avatar") ||
+          url.includes("background") ||
+          url.includes("/sc/h/");
+
         // JSON-LD is the best source — it's always the user's photo
-        if (ld?.image?.contentUrl) return ld.image.contentUrl;
-        if (typeof ld?.image === "string" && !ld.image.includes("logo")) return ld.image;
+        const ldUrl = ld?.image?.contentUrl ?? (typeof ld?.image === "string" ? ld.image : "");
+        if (ldUrl && !isGenericImg(ldUrl)) return ldUrl;
 
         // DOM: select the specific profile image element
-        const profileImg = document.querySelector("img.top-card-layout__entity-image") as HTMLImageElement | null;
-        if (profileImg?.src && !profileImg.src.includes("logo") && !profileImg.src.includes("static")) {
-          return profileImg.src;
-        }
+        const profileImg = document.querySelector("img.top-card-layout__entity-image");
+        const profileSrc = profileImg?.getAttribute("src") ?? "";
+        if (profileSrc && !isGenericImg(profileSrc)) return profileSrc;
 
         // og:image — but filter out LinkedIn's generic images
         const ogImage = metaContent("og:image");
-        if (ogImage && !ogImage.includes("static.licdn.com/sc/h/") && !ogImage.includes("logo")) {
-          return ogImage;
+        if (ogImage && !isGenericImg(ogImage)) return ogImage;
+
+        // Look for any actual profile photo with media.licdn.com domain
+        const allImgs = document.querySelectorAll("img[src*='media.licdn.com'][src*='displayphoto']");
+        for (const img of allImgs) {
+          const src = img.getAttribute("src") ?? "";
+          if (src && !isGenericImg(src)) return src;
         }
+
         return "";
       })();
 
