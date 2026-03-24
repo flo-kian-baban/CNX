@@ -13,11 +13,11 @@ function isSafeUrl(url: string): boolean {
 }
 
 // ─────────────────────────────────────────────
-// Platform icons
+// Platform icons — 18px
 // ─────────────────────────────────────────────
 
 function getSocialIcon(platform: SocialLink["platform"]): React.ReactNode {
-  const cls = "h-[22px] w-[22px]";
+  const cls = "h-[18px] w-[18px]";
   switch (platform) {
     case "linkedin": return <svg className={cls} viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>;
     case "github": return <svg className={cls} viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>;
@@ -71,15 +71,15 @@ interface PublicCardProps {
 }
 
 // ─────────────────────────────────────────────
-// Public Card
+// Public Card — Premium Dark Profile
 // ─────────────────────────────────────────────
 
 export default function PublicCard({ card, isPreview }: PublicCardProps) {
   const [bioExpanded, setBioExpanded] = useState(false);
   const [expandedExp, setExpandedExp] = useState<Set<string>>(new Set());
 
-  const backgroundColor = card.cardTheme?.backgroundColor ?? '#030712';
-  const accentColor = card.cardTheme?.accentColor ?? '#4f46e5';
+  const backgroundColor = card.cardTheme?.backgroundColor ?? "#030712";
+  const accentColor = card.cardTheme?.accentColor ?? "#4f46e5";
 
   const hasPhone = !!card.phone?.trim();
   const hasEmail = !!card.email?.trim();
@@ -88,185 +88,303 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
   const experiences = card.experience ?? [];
 
   return (
-    <div className={`${isPreview ? "" : "card-enter min-h-screen"} mx-auto max-w-md`} style={{ backgroundColor }}>
+    <div
+      className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md overflow-hidden`}
+      style={{
+        backgroundColor,
+        animation: isPreview ? undefined : "cardFadeIn 300ms ease-out both",
+      }}
+    >
+      {/* Ambient radial glow */}
+      {!isPreview && (
+        <div
+          className="pointer-events-none absolute left-0 right-0 top-0 z-0 h-64"
+          style={{
+            background: `radial-gradient(ellipse at 50% 0%, ${accentColor}15 0%, transparent 70%)`,
+          }}
+        />
+      )}
 
-      {/* ── 1. Banner ── */}
-      <div className="relative z-0 h-40 w-full">
-        {card.bannerImage ? (
-          <img src={card.bannerImage} alt="Banner" className="h-full w-full object-cover" />
-        ) : (
-          <div className="relative h-full w-full overflow-hidden bg-gradient-to-r from-indigo-900 via-violet-800 to-indigo-900">
-            <div className="absolute inset-0 animate-pulse-slow bg-gradient-to-r from-white/0 via-white/5 to-white/0" />
-          </div>
-        )}
-      </div>
+      {/* All content above the glow */}
+      <div className="relative z-[1]">
 
-      {/* ── 2. Profile Photo ── */}
-      <div className="relative z-10 -mt-16 flex justify-center">
-        {card.profileImage ? (
-          <div className="relative inline-flex">
-            <Image src={card.profileImage} alt={card.displayName || "Profile"} width={128} height={128}
-              className="relative z-10 h-32 w-32 rounded-full object-cover ring-4" style={{ ["--tw-ring-color" as string]: backgroundColor } as React.CSSProperties} unoptimized />
-          </div>
-        ) : (
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 ring-4 ring-gray-950">
-            {card.displayName ? (
-              <span className="text-4xl font-bold text-white">{card.displayName[0].toUpperCase()}</span>
-            ) : (
-              <svg className="h-12 w-12 text-white/60" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-              </svg>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── 3. Identity ── */}
-      <div className="px-6 pt-3 text-center">
-        <h1 className="text-2xl font-bold text-white">
-          {card.displayName?.trim() || <span className="text-gray-600">Your Name</span>}
-        </h1>
-        <p className="mt-1 text-base font-medium" style={{ color: accentColor }}>
-          {card.title?.trim() || <span className="text-gray-700">Your Title</span>}
-        </p>
-        {card.location?.trim() && (
-          <p className="mt-1 flex items-center justify-center gap-1 text-sm text-gray-400">
-            <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            {card.location}
-          </p>
-        )}
-        <div className="mt-3 mx-auto max-w-xs">
-          {card.bio?.trim() ? (
-            <>
-              <p className={`text-sm leading-relaxed text-gray-300 ${!bioExpanded ? "line-clamp-3" : ""}`}>{card.bio}</p>
-              {card.bio.length > 120 && !bioExpanded && (
-                <button onClick={() => setBioExpanded(true)} className="mt-1 text-sm font-medium text-indigo-400 hover:text-indigo-300">Read more</button>
-              )}
-            </>
+        {/* ── 1. Banner ── */}
+        <div className="relative h-28 w-full overflow-hidden">
+          {card.bannerImage ? (
+            <img src={card.bannerImage} alt="" className="h-full w-full object-cover object-top" />
           ) : (
-            <p className="text-sm italic text-gray-700">Your bio will appear here</p>
+            <div className="h-full w-full" style={{ backgroundColor }}>
+              <div
+                className="h-full w-full"
+                style={{
+                  background: `linear-gradient(135deg, ${accentColor}20 0%, transparent 50%, ${accentColor}10 100%)`,
+                }}
+              />
+            </div>
           )}
         </div>
-      </div>
 
-      {/* ── 4. Social Links ── */}
-      <div className="mt-6 px-6">
-        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: accentColor, opacity: 0.7 }}>Connect</p>
-        {activeSocials.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-3">
-            {activeSocials.map((s, i) => (
-              <a key={`${s.platform}-${i}`} href={s.url} target="_blank" rel="noopener noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-gray-300 transition-all duration-200 hover:bg-white/15 hover:text-white"
-                aria-label={s.platform}>
-                {getSocialIcon(s.platform)}
-              </a>
-            ))}
+        {/* ── 2. Profile Photo ── */}
+        <div className="relative z-10 -mt-12 flex justify-center">
+          {card.profileImage ? (
+            <Image
+              src={card.profileImage}
+              alt={card.displayName || "Profile"}
+              width={96}
+              height={96}
+              className="h-24 w-24 rounded-full object-cover ring-4"
+              style={{ ["--tw-ring-color" as string]: backgroundColor } as React.CSSProperties}
+              unoptimized
+            />
+          ) : (
+            <div
+              className="flex h-24 w-24 items-center justify-center rounded-full ring-4"
+              style={{
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                ["--tw-ring-color" as string]: backgroundColor,
+              } as React.CSSProperties}
+            >
+              {card.displayName ? (
+                <span className="text-3xl font-bold text-white">{card.displayName[0].toUpperCase()}</span>
+              ) : (
+                <svg className="h-10 w-10 text-white/60" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── 3. Identity ── */}
+        <div className="px-5 pt-3 text-center">
+          <h1 className="text-xl font-bold text-white">
+            {card.displayName?.trim() || <span className="text-gray-600">Your Name</span>}
+          </h1>
+
+          {(card.title?.trim() || isPreview) && (
+            <p className="mt-0.5 text-sm font-medium" style={{ color: accentColor, opacity: 0.85 }}>
+              {card.title?.trim() || <span style={{ opacity: 0.4 }}>Your Title</span>}
+            </p>
+          )}
+
+          {card.location?.trim() && (
+            <p className="mt-0.5 text-xs text-gray-500">{card.location}</p>
+          )}
+
+          <div className="mx-auto mt-2 max-w-[280px]">
+            {card.bio?.trim() ? (
+              <>
+                <p className={`text-xs leading-relaxed text-gray-400 ${!bioExpanded ? "line-clamp-2" : ""}`}>
+                  {card.bio}
+                </p>
+                {card.bio.length > 80 && !bioExpanded && (
+                  <button
+                    onClick={() => setBioExpanded(true)}
+                    className="mt-0.5 text-xs font-medium"
+                    style={{ color: accentColor }}
+                  >
+                    more
+                  </button>
+                )}
+              </>
+            ) : isPreview ? (
+              <p className="text-xs italic text-gray-700">Your bio will appear here</p>
+            ) : null}
           </div>
-        ) : (
-          <>
-            <div className="flex justify-center gap-3">
+        </div>
+
+        {/* ── 4. Social Links ── */}
+        <div className="mt-4 px-5">
+          {activeSocials.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-2.5">
+              {activeSocials.map((s, i) => (
+                <a
+                  key={`${s.platform}-${i}`}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  aria-label={s.platform}
+                >
+                  {getSocialIcon(s.platform)}
+                </a>
+              ))}
+            </div>
+          ) : isPreview ? (
+            <div className="flex justify-center gap-2.5">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.04] text-gray-700">
-                  <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <div
+                  key={i}
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-gray-700"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px dashed rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <svg className="h-[14px] w-[14px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
                   </svg>
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-center text-xs text-gray-600">Add your social links</p>
-          </>
-        )}
-      </div>
-
-      {/* ── 5. Experience ── */}
-      {experiences.length > 0 && (
-        <div className="mt-8 px-6">
-          <p className="text-sm font-semibold text-white">Experience</p>
-          <div className="mb-4 mt-2 border-t border-white/[0.08]" />
-          {experiences.map((exp) => (
-            <div key={exp.id} className="mb-6 flex gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.08] text-sm font-semibold text-gray-400 overflow-hidden">
-                {exp.companyLogo ? (
-                  <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-cover" />
-                ) : (
-                  (exp.company || "?")[0].toUpperCase()
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white">{exp.role}</p>
-                <p className="text-sm text-gray-400">{exp.company}</p>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  {exp.startDate}{exp.current ? " – Present" : exp.endDate ? ` – ${exp.endDate}` : ""}
-                </p>
-                {exp.description && (
-                  <p className={`mt-1 text-xs leading-relaxed text-gray-400 ${!expandedExp.has(exp.id) ? "line-clamp-2" : ""}`}>
-                    {exp.description}
-                    {exp.description.length > 100 && !expandedExp.has(exp.id) && (
-                      <button onClick={() => setExpandedExp((prev) => new Set(prev).add(exp.id))}
-                        className="ml-1 text-indigo-400 hover:text-indigo-300">more</button>
-                    )}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
+          ) : null}
         </div>
-      )}
 
-      {/* ── 6. Custom Links ── */}
-      <div className="mt-6 px-6">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-500">Links</p>
-        {activeCustomLinks.length > 0 ? (
-          <div className="space-y-2">
-            {activeCustomLinks.map((link, i) => (
-              <a key={`${link.label}-${i}`} href={link.url} target="_blank" rel="noopener noreferrer"
-                className="group flex items-center justify-between rounded-2xl border border-white/[0.08] bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-all duration-150 hover:translate-x-[2px] hover:bg-white/10">
-                <span>{link.label || link.url}</span>
-                <svg className="h-4 w-4 text-gray-600 transition-colors group-hover:text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                </svg>
-              </a>
+        {/* ── 5. Experience ── */}
+        {experiences.length > 0 && (
+          <div className="mt-5 px-5">
+            <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }} />
+            <p className="mb-3 mt-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
+              Experience
+            </p>
+            {experiences.map((exp) => (
+              <div key={exp.id} className="mb-4 flex gap-3">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl text-xs font-semibold text-gray-400"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  {exp.companyLogo ? (
+                    <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-cover" />
+                  ) : (
+                    (exp.company || "?")[0].toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white">{exp.role}</p>
+                  <p className="text-xs text-gray-400">{exp.company}</p>
+                  <p className="mt-0.5 text-[10px] text-gray-600">
+                    {exp.startDate}{exp.current ? " – Present" : exp.endDate ? ` – ${exp.endDate}` : ""}
+                  </p>
+                  {exp.description && (
+                    <p className={`mt-1 text-[11px] leading-relaxed text-gray-500 ${!expandedExp.has(exp.id) ? "line-clamp-2" : ""}`}>
+                      {exp.description}
+                      {exp.description.length > 100 && !expandedExp.has(exp.id) && (
+                        <button
+                          onClick={() => setExpandedExp((prev) => new Set(prev).add(exp.id))}
+                          className="ml-1 font-medium"
+                          style={{ color: accentColor }}
+                        >
+                          more
+                        </button>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-white/10 px-4 py-3 text-center text-xs text-gray-700">
-            Your links will appear here
+        )}
+
+        {/* ── 6. Custom Links ── */}
+        {(activeCustomLinks.length > 0 || isPreview) && (
+          <div className="mt-4 px-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
+              Links
+            </p>
+            {activeCustomLinks.length > 0 ? (
+              <div className="space-y-2">
+                {activeCustomLinks.map((link, i) => (
+                  <a
+                    key={`${link.label}-${i}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex h-11 items-center justify-between rounded-xl px-4 text-sm text-gray-300 transition-all duration-150 hover:text-white active:scale-[0.98]"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <span className="truncate">{link.label || link.url}</span>
+                    <svg className="ml-2 h-3.5 w-3.5 shrink-0 text-gray-600 transition-colors group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="flex h-11 items-center justify-center rounded-xl text-[11px] text-gray-700"
+                style={{ border: "1px dashed rgba(255,255,255,0.07)" }}
+              >
+                Your links will appear here
+              </div>
+            )}
           </div>
         )}
+
+        {/* ── 7. Action Buttons ── */}
+        <div className={`mt-5 flex items-stretch gap-2.5 px-5 ${isPreview ? "pb-4" : "pb-8"}`}>
+          {hasPhone && (
+            <a
+              href={`tel:${card.phone}`}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+              aria-label="Call"
+            >
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+              </svg>
+            </a>
+          )}
+
+          <button
+            onClick={() => downloadVCard(card)}
+            className="flex h-12 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+            style={{ backgroundColor: accentColor }}
+          >
+            Save Contact
+          </button>
+
+          {hasEmail && (
+            <a
+              href={`mailto:${card.email}`}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+              aria-label="Email"
+            >
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+              </svg>
+            </a>
+          )}
+        </div>
+
+        {/* ── 8. Footer ── */}
+        <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "mt-6 pb-6"}`}>
+          Powered by{" "}
+          <a href="/" className="font-medium text-gray-500 transition-colors hover:text-indigo-400">
+            CNX
+          </a>
+        </p>
       </div>
 
-      {/* ── 7. Action Buttons ── */}
-      <div className={`mt-8 flex items-stretch gap-3 px-6 ${isPreview ? "pb-4" : "pb-10"}`}>
-        {hasPhone && (
-          <a href={`tel:${card.phone}`} className="flex w-14 shrink-0 flex-col items-center gap-1">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-gray-300 transition-all duration-200 hover:bg-white/15 hover:text-white active:scale-95">
-              <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
-            </span>
-            <span className="text-xs text-gray-400">Call</span>
-          </a>
-        )}
-        <button onClick={() => downloadVCard(card)}
-          className="flex h-14 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98]"
-          style={{ backgroundColor: accentColor }}>
-          Save Contact
-        </button>
-        {hasEmail && (
-          <a href={`mailto:${card.email}`} className="flex w-14 shrink-0 flex-col items-center gap-1">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-gray-300 transition-all duration-200 hover:bg-white/15 hover:text-white active:scale-95">
-              <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
-            </span>
-            <span className="text-xs text-gray-400">Email</span>
-          </a>
-        )}
-      </div>
-
-      {/* ── 8. Footer ── */}
-      <p className={`text-center text-xs text-gray-700 ${isPreview ? "pb-2" : "mt-4 pb-6"}`}>
-        Powered by <a href="/" className="font-medium text-gray-500 transition-colors hover:text-indigo-400">CNX</a>
-      </p>
+      {/* Entrance animation keyframes */}
+      <style jsx>{`
+        @keyframes cardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
