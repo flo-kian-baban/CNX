@@ -71,6 +71,7 @@ interface FormState {
   slug: string;
   backgroundColor: string;
   accentColor: string;
+  bannerColor: string;
 }
 
 interface FormErrors {
@@ -89,7 +90,7 @@ const EMPTY_FORM: FormState = {
   displayName: "", title: "", bio: "", location: "",
   phone: "", email: "", profileImage: "", bannerImage: "",
   socialLinks: emptySocialLinks(), customLinks: [], experience: [], slug: "",
-  backgroundColor: "#030712", accentColor: "#4f46e5",
+  backgroundColor: "#030712", accentColor: "#F15928", bannerColor: "#F15928",
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -163,7 +164,7 @@ function formToCard(form: FormState): BusinessCard {
     socialLinks, customLinks: form.customLinks,
     experience: form.experience.length > 0 ? form.experience : undefined,
     slug: form.slug || undefined,
-    cardTheme: { backgroundColor: form.backgroundColor, accentColor: form.accentColor },
+    cardTheme: { backgroundColor: form.backgroundColor, accentColor: form.accentColor, bannerColor: form.bannerColor },
     updatedAt: null as unknown as BusinessCard["updatedAt"],
   };
 }
@@ -215,6 +216,7 @@ function EditCardContent() {
   const qrRef = useRef<HTMLDivElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
   const accentColorRef = useRef<HTMLInputElement>(null);
+  const bannerColorRef = useRef<HTMLInputElement>(null);
 
   const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(savedForm), [form, savedForm]);
   const completeness = useMemo(() => calcCompleteness(form), [form]);
@@ -241,7 +243,8 @@ function EditCardContent() {
       experience: card.experience ?? [],
       slug: loadedSlug,
       backgroundColor: card.cardTheme?.backgroundColor ?? "#030712",
-      accentColor: card.cardTheme?.accentColor ?? "#4f46e5",
+      accentColor: card.cardTheme?.accentColor ?? "#F15928",
+      bannerColor: card.cardTheme?.bannerColor ?? "#F15928",
     };
     setForm(loaded);
     setSavedForm(loaded);
@@ -727,6 +730,19 @@ function EditCardContent() {
                       value={form.backgroundColor} onChange={(e) => setForm((prev) => ({ ...prev, backgroundColor: e.target.value }))} />
                     <span className="font-mono text-sm text-gray-400">{form.backgroundColor}</span>
                   </div>
+                </div>
+                {/* Banner color */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-300">Banner color</label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => bannerColorRef.current?.click()}
+                      className="h-10 w-10 rounded-xl border border-white/20 transition-transform hover:scale-105"
+                      style={{ backgroundColor: form.bannerColor }} />
+                    <input ref={bannerColorRef} type="color" className="sr-only"
+                      value={form.bannerColor} onChange={(e) => setForm((prev) => ({ ...prev, bannerColor: e.target.value }))} />
+                    <span className="font-mono text-sm text-gray-400">{form.bannerColor}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-600">Used when no banner image is set</p>
                 </div>
                 {/* Accent color */}
                 <div>

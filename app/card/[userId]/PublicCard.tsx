@@ -79,7 +79,8 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
   const [expandedExp, setExpandedExp] = useState<Set<string>>(new Set());
 
   const backgroundColor = card.cardTheme?.backgroundColor ?? "#030712";
-  const accentColor = card.cardTheme?.accentColor ?? "#4f46e5";
+  const accentColor = card.cardTheme?.accentColor ?? "#F15928";
+  const bannerColor = card.cardTheme?.bannerColor ?? "#F15928";
 
   const hasPhone = !!card.phone?.trim();
   const hasEmail = !!card.email?.trim();
@@ -113,11 +114,11 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           {card.bannerImage ? (
             <img src={card.bannerImage} alt="" className="h-full w-full object-cover object-top" />
           ) : (
-            <div className="h-full w-full" style={{ backgroundColor }}>
+            <div className="h-full w-full" style={{ backgroundColor: bannerColor }}>
               <div
                 className="h-full w-full"
                 style={{
-                  background: `linear-gradient(135deg, ${accentColor}20 0%, transparent 50%, ${accentColor}10 100%)`,
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)`,
                 }}
               />
             </div>

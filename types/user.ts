@@ -71,6 +71,7 @@ export interface BusinessCard {
   cardTheme?: {
     backgroundColor: string;
     accentColor: string;
+    bannerColor?: string;
   };
   updatedAt: Timestamp | string;
 }
