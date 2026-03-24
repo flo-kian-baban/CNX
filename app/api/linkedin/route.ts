@@ -106,6 +106,14 @@ export async function POST(req: NextRequest) {
         document.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") ??
         document.querySelector(`meta[name="${prop}"]`)?.getAttribute("content") ?? "";
 
+      // Check if a string is mostly asterisks (LinkedIn redaction)
+      const isRedacted = (val: unknown) => {
+        if (!val || typeof val !== "string") return true;
+        const s = val;
+        const cleaned = s.replace(/[\s,.*]+/g, "");
+        return cleaned.length === 0 || (s.replace(/[^*]/g, "").length / s.length) > 0.3;
+      };
+
       // ── JSON-LD (most reliable for name, photo, current company) ──
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let ld: any = null;
@@ -123,24 +131,44 @@ export async function POST(req: NextRequest) {
         } catch { /* noop */ }
       });
 
+      // Helper: pick the first non-redacted value
+      const pick = (...values: unknown[]) => {
+        for (const v of values) {
+          if (v && typeof v === "string" && !isRedacted(v)) return v;
+        }
+        return "";
+      };
+
       // ── Name ──
-      const name =
-        text("h1.top-card-layout__title") ||
-        text(".pv-top-card--list li:first-child") ||
-        ld?.name ||
-        metaContent("og:title")?.replace(/\s*[-–|].*$/g, "").trim() ||
-        "";
+      const name = pick(
+        text("h1.top-card-layout__title"),
+        text(".pv-top-card--list li:first-child"),
+        ld?.name ?? "",
+        metaContent("og:title")?.replace(/\s*[-–|].*$/g, "").trim(),
+      );
 
       // ── Headline / Title ──
-      let headline =
-        text("h2.top-card-layout__headline") ||
-        text(".top-card-layout__headline") ||
-        ld?.jobTitle ||
-        "";
+      // LinkedIn aggressively redacts headline with **** for guest users.
+      // og:title often has "Name - Title | LinkedIn" and og:description has "Title at Company · Location"
+      let headline = pick(
+        text("h2.top-card-layout__headline"),
+        text(".top-card-layout__headline"),
+        ld?.jobTitle ?? "",
+      );
       if (!headline) {
-        // og:description often contains "Title at Company · Location"
+        // Try og:title: "Kian Baban - Co-Founder & CTO | LinkedIn"
+        const ogTitle = metaContent("og:title");
+        if (ogTitle) {
+          const titleMatch = ogTitle.match(/^.+?\s*[-–]\s*(.+?)\s*[|].*$/);
+          if (titleMatch?.[1] && !isRedacted(titleMatch[1])) {
+            headline = titleMatch[1].trim();
+          }
+        }
+      }
+      if (!headline) {
+        // Try og:description: "Title at Company · Location"
         const desc = metaContent("og:description");
-        if (desc) {
+        if (desc && !isRedacted(desc)) {
           const match = desc.match(/^(.+?)\s*[·|·]\s*/);
           headline = match ? match[1].trim() : (desc.split(".")[0]?.trim() ?? "");
         }
