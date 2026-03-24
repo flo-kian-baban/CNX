@@ -132,20 +132,19 @@ export async function POST(req: NextRequest) {
         "";
 
       // ── Headline / Title ──
-      const headline =
+      let headline =
         text("h2.top-card-layout__headline") ||
         text(".top-card-layout__headline") ||
         ld?.jobTitle ||
-        (() => {
-          // og:description often contains "Title at Company · Location"
-          const desc = metaContent("og:description");
-          if (desc) {
-            const match = desc.match(/^(.+?)\s*[·|·]\s*/);
-            return match ? match[1].trim() : desc.split(".")[0]?.trim() ?? "";
-          }
-          return "";
-        })() ||
         "";
+      if (!headline) {
+        // og:description often contains "Title at Company · Location"
+        const desc = metaContent("og:description");
+        if (desc) {
+          const match = desc.match(/^(.+?)\s*[·|·]\s*/);
+          headline = match ? match[1].trim() : (desc.split(".")[0]?.trim() ?? "");
+        }
+      }
 
       // ── About ──
       const about =
@@ -217,28 +216,41 @@ export async function POST(req: NextRequest) {
       return { name, headline, about, location, profilePhoto, experiences };
     });
 
-    // Don't return data from the auth wall page
-    const cleanName = (data.name ?? "").replace(/^Join LinkedIn.*$/i, "").trim();
-    const cleanHeadline = (data.headline ?? "").replace(/^Sign in.*$/i, "").trim();
+    // Safely coerce all values to strings
+    const rawName = String(data.name ?? "");
+    const rawHeadline = String(data.headline ?? "").replace(/[\*]{3,}/g, "").replace(/[,\s]+$/g, "").trim();
+    const rawAbout = String(data.about ?? "").replace(/[\*]{3,}/g, "").trim();
+    const rawLocation = String(data.location ?? "");
+    const rawPhoto = String(data.profilePhoto ?? "");
 
-    const experiences: MappedExperience[] = (data.experiences ?? []).map(
+    // Don't return data from the auth wall page
+    const cleanName = rawName.replace(/^Join LinkedIn.*$/i, "").trim();
+    const cleanHeadline = rawHeadline.replace(/^Sign in.*$/i, "").trim();
+
+    const experiences: MappedExperience[] = (data.experiences ?? [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (exp: any, i: number) => ({
+      .filter((exp: any) => {
+        const company = String(exp.company ?? "").replace(/[\*]{3,}/g, "").trim();
+        const role = String(exp.role ?? "").replace(/[\*]{3,}/g, "").trim();
+        return company || role; // skip if both redacted
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((exp: any, i: number) => ({
         id: `li-${Date.now()}-${i}`,
-        company: exp.company ?? "",
-        role: exp.role ?? "",
+        company: String(exp.company ?? "").replace(/[\*]{3,}/g, "").trim(),
+        role: String(exp.role ?? "").replace(/[\*]{3,}/g, "").replace(/[,\s]+$/g, "").trim(),
         startDate: "",
         current: true,
         description: undefined,
-      }),
-    );
+      }))
+      .filter((exp: MappedExperience) => exp.company || exp.role);
 
     const result = {
       displayName: cleanName,
       title: cleanHeadline,
-      bio: (data.about ?? "").replace(/[\*]{4,}/g, "").trim(),
-      location: data.location ?? "",
-      profileImage: data.profilePhoto ?? "",
+      bio: rawAbout.replace(/<[^>]*>/g, "\n").replace(/[\*]{4,}/g, "").trim(),
+      location: rawLocation,
+      profileImage: rawPhoto,
       experiences,
       linkedinUrl: url.trim(),
     };
@@ -254,8 +266,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("[LinkedIn Scraper] Error:", err);
+    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Failed to scrape LinkedIn profile. Please try again." },
+      { error: `Scraper error: ${message}` },
       { status: 500 },
     );
   } finally {
