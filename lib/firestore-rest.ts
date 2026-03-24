@@ -51,7 +51,7 @@ export async function getBusinessCardRest(uid: string): Promise<BusinessCard | n
     return null;
   }
 
-  const url = `${FIRESTORE_BASE}/users/${uid}/profile/card`;
+  const url = `${FIRESTORE_BASE}/cards/${uid}`;
 
   try {
     const res = await fetch(url);

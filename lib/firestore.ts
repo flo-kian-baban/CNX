@@ -53,7 +53,7 @@ export async function getUserDocument(uid: string): Promise<UserProfile | null> 
 
 /**
  * Creates or updates the business card document at
- * `users/{uid}/profile/card`.
+ * `cards/{uid}`.
  *
  * Schema:
  *   displayName, title, bio?, location?, phone, email,
@@ -79,7 +79,7 @@ export async function updateBusinessCard(
   uid: string,
   card: Omit<BusinessCard, "updatedAt">
 ): Promise<void> {
-  const cardRef = doc(db, "users", uid, "profile", "card");
+  const cardRef = doc(db, "cards", uid);
   const cleaned = deepClean(card);
   await setDoc(cardRef, {
     ...cleaned,
@@ -89,11 +89,11 @@ export async function updateBusinessCard(
 
 /**
  * Reads the business card document from
- * `users/{uid}/profile/card`.
+ * `cards/{uid}`.
  * Returns `null` if no card exists yet or is malformed.
  */
 export async function getBusinessCard(uid: string): Promise<BusinessCard | null> {
-  const snapshot = await getDoc(doc(db, "users", uid, "profile", "card"));
+  const snapshot = await getDoc(doc(db, "cards", uid));
   if (!snapshot.exists()) return null;
   const data = snapshot.data();
   if (!data || typeof data.displayName !== "string") return null;
