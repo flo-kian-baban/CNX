@@ -245,14 +245,14 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             {experiences.map((exp) => (
               <div key={exp.id} className="mb-4 flex gap-3">
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl text-xs font-semibold text-gray-400"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
                   style={{
                     background: "rgba(255,255,255,0.06)",
                     border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
                   {exp.companyLogo ? (
-                    <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-cover" />
+                    <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-contain p-1" />
                   ) : (
                     (exp.company || "?")[0].toUpperCase()
                   )}
