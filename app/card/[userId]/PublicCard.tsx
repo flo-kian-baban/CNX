@@ -352,8 +352,16 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           </div>
         )}
 
-        {/* ── 7. Action Buttons ── */}
-        <div className={`mt-5 flex items-stretch gap-3 px-5 ${isPreview ? "pb-4" : "pb-8"}`}>
+        {/* ── 7. Action Buttons (sticky bottom) ── */}
+        <div className="sticky bottom-0 z-10">
+          <div
+            className="pointer-events-none h-6"
+            style={{ background: `linear-gradient(to bottom, transparent, ${backgroundColor})` }}
+          />
+          <div
+            className="flex items-stretch gap-3 px-5 pb-5 pt-1"
+            style={{ backgroundColor }}
+          >
           {hasPhone && (
             <a
               href={`tel:${card.phone}`}
@@ -393,10 +401,11 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
               </svg>
             </a>
           )}
+          </div>
         </div>
 
         {/* ── 8. Footer ── */}
-        <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "mt-6 pb-6"}`}>
+        <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "pb-6"}`}>
           Powered by{" "}
           <a href="/" className="font-medium text-gray-500 transition-colors hover:text-[#F15928]">
             CNX
