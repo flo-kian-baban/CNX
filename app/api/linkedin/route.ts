@@ -283,7 +283,68 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      return { name, headline, about, location, profilePhoto, bannerImage, experiences };
+      // ── Education ──
+      // Strategy: JSON-LD alumniOf → DOM education section → heuristic from combined section
+      const education: { institution: string; degree: string; fieldOfStudy: string; logo: string } = {
+        institution: "", degree: "", fieldOfStudy: "", logo: "",
+      };
+
+      // 1) JSON-LD alumniOf
+      if (ld?.alumniOf) {
+        const schools = Array.isArray(ld.alumniOf) ? ld.alumniOf : [ld.alumniOf];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const lastSchool = schools[schools.length - 1] as any;
+        if (lastSchool?.name && !lastSchool.name.includes("*******")) {
+          education.institution = lastSchool.name;
+        }
+      }
+
+      // 2) DOM: dedicated education section
+      const eduSelectors = [
+        "section.education li",
+        "section#education li",
+        ".education__list li",
+        "ul.education__list li",
+      ];
+      for (const sel of eduSelectors) {
+        const items = document.querySelectorAll(sel);
+        if (items.length > 0) {
+          // Take the first (most recent) education entry
+          const item = items[0];
+          const name = item.querySelector("h3, .education__item--degree-info h3, .result-card__title")?.textContent?.trim() ?? "";
+          const subtitle = item.querySelector("h4, .education__item--degree-info h4, .result-card__subtitle")?.textContent?.trim() ?? "";
+          const logoEl = item.querySelector("img");
+          const logoSrc = logoEl?.getAttribute("src") ?? "";
+
+          if (name && !name.includes("*******")) {
+            if (!education.institution) education.institution = name;
+            if (subtitle && !subtitle.includes("*******")) education.fieldOfStudy = subtitle;
+            if (logoSrc && !logoSrc.includes("static.licdn.com/sc/h/")) education.logo = logoSrc;
+          }
+          break;
+        }
+      }
+
+      // 3) Heuristic: in the combined "Experience & Education" section,
+      //    look for items with university/college keywords
+      if (!education.institution) {
+        const eduKeywords = /university|college|institute|school|academy|polytechnic|conservatory/i;
+        document.querySelectorAll("li.experience-item").forEach((item) => {
+          if (education.institution) return; // already found
+          const title = item.querySelector("h3, .experience-item__title")?.textContent?.trim() ?? "";
+          const subtitle = item.querySelector("h4, .experience-item__subtitle, span.experience-item__duration")?.textContent?.trim() ?? "";
+          const logoEl = item.querySelector("img");
+          const logoSrc = logoEl?.getAttribute("src") ?? "";
+
+          if (eduKeywords.test(title) || eduKeywords.test(subtitle)) {
+            education.institution = title || subtitle;
+            if (subtitle && subtitle !== education.institution) education.fieldOfStudy = subtitle;
+            if (logoSrc && !logoSrc.includes("static.licdn.com/sc/h/")) education.logo = logoSrc;
+          }
+        });
+      }
+
+      return { name, headline, about, location, profilePhoto, bannerImage, experiences, education };
     });
 
     // Safely coerce all values to strings
@@ -316,6 +377,18 @@ export async function POST(req: NextRequest) {
       }))
       .filter((exp: MappedExperience) => exp.company || exp.role);
 
+    // Sanitise education
+    const rawEdu = data.education ?? {};
+    const eduInstitution = String(rawEdu.institution ?? "").replace(/[\*]{3,}/g, "").trim();
+    const education = eduInstitution
+      ? {
+          institution: eduInstitution,
+          degree: String(rawEdu.degree ?? "").replace(/[\*]{3,}/g, "").trim() || undefined,
+          fieldOfStudy: String(rawEdu.fieldOfStudy ?? "").replace(/[\*]{3,}/g, "").trim() || undefined,
+          logo: String(rawEdu.logo ?? "").trim() || undefined,
+        }
+      : undefined;
+
     const result = {
       displayName: cleanName,
       title: cleanHeadline,
@@ -324,6 +397,7 @@ export async function POST(req: NextRequest) {
       profileImage: rawPhoto,
       bannerImage: rawBanner || undefined,
       experiences,
+      education,
       linkedinUrl: url.trim(),
     };
 

@@ -52,6 +52,16 @@ export interface Experience {
 }
 
 /**
+ * An education entry.
+ */
+export interface Education {
+  institution: string;
+  degree?: string;
+  fieldOfStudy?: string;
+  logo?: string;
+}
+
+/**
  * Represents the business card document stored in
  * `users/{userId}/profile/card`.
  */
@@ -67,6 +77,7 @@ export interface BusinessCard {
   socialLinks: SocialLink[];
   customLinks: CustomLink[];
   experience?: Experience[];
+  education?: Education;
   slug?: string;
   cardTheme?: {
     backgroundColor: string;

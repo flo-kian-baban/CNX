@@ -13,7 +13,7 @@ import {
   SLUG_TAKEN_ERROR,
 } from "@/lib/firestore";
 import { uploadProfileImage, uploadBannerImage } from "@/lib/storage";
-import type { BusinessCard, CustomLink, SocialLink, Experience } from "@/types/user";
+import type { BusinessCard, CustomLink, SocialLink, Experience, Education } from "@/types/user";
 import PublicCard from "@/app/card/[userId]/PublicCard";
 import { useToast } from "@/components/Toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -68,6 +68,7 @@ interface FormState {
   socialLinks: Record<SocialLink["platform"], string>;
   customLinks: CustomLink[];
   experience: Experience[];
+  education?: Education;
   slug: string;
   backgroundColor: string;
   accentColor: string;
@@ -89,7 +90,7 @@ function emptySocialLinks(): Record<SocialLink["platform"], string> {
 const EMPTY_FORM: FormState = {
   displayName: "", title: "", bio: "", location: "",
   phone: "", email: "", profileImage: "", bannerImage: "",
-  socialLinks: emptySocialLinks(), customLinks: [], experience: [], slug: "",
+  socialLinks: emptySocialLinks(), customLinks: [], experience: [], education: undefined, slug: "",
   backgroundColor: "#030712", accentColor: "#F15928", bannerColor: "#F15928",
 };
 
@@ -163,6 +164,7 @@ function formToCard(form: FormState): BusinessCard {
     bannerImage: form.bannerImage || undefined,
     socialLinks, customLinks: form.customLinks,
     experience: form.experience.length > 0 ? form.experience : undefined,
+    education: form.education?.institution ? form.education : undefined,
     slug: form.slug || undefined,
     cardTheme: { backgroundColor: form.backgroundColor, accentColor: form.accentColor, bannerColor: form.bannerColor },
     updatedAt: null as unknown as BusinessCard["updatedAt"],
@@ -244,6 +246,7 @@ function EditCardContent() {
       bannerImage: card.bannerImage ?? "",
       socialLinks: socials, customLinks: card.customLinks ?? [],
       experience: card.experience ?? [],
+      education: card.education ?? undefined,
       slug: loadedSlug,
       backgroundColor: card.cardTheme?.backgroundColor ?? "#030712",
       accentColor: card.cardTheme?.accentColor ?? "#F15928",
@@ -566,6 +569,7 @@ function EditCardContent() {
                           profileImage: data.profileImage || prev.profileImage,
                           bannerImage: data.bannerImage || prev.bannerImage,
                           experience: data.experiences?.length ? data.experiences : prev.experience,
+                          education: data.education || prev.education,
                           socialLinks: {
                             ...prev.socialLinks,
                             linkedin: data.linkedinUrl || prev.socialLinks.linkedin,
@@ -579,6 +583,7 @@ function EditCardContent() {
                         if (data.location) imported.push("location");
                         if (data.bannerImage) imported.push("banner");
                         if (data.experiences?.length) imported.push(`${data.experiences.length} experiences`);
+                        if (data.education?.institution) imported.push("education");
                         showToast(`Imported: ${imported.join(", ")}`, "success");
                       } catch (err) {
                         const msg = err instanceof Error ? err.message : "Import failed";
