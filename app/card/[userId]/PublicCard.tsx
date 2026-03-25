@@ -77,6 +77,8 @@ interface PublicCardProps {
 export default function PublicCard({ card, isPreview }: PublicCardProps) {
   const [bioExpanded, setBioExpanded] = useState(false);
   const [expandedExp, setExpandedExp] = useState<Set<string>>(new Set());
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
 
   const backgroundColor = card.cardTheme?.backgroundColor ?? "#030712";
   const accentColor = card.cardTheme?.accentColor ?? "#F15928";
@@ -112,7 +114,15 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         {/* ── 1. Banner ── */}
         <div className="relative h-28 w-full overflow-hidden">
           {card.bannerImage ? (
-            <img src={card.bannerImage} alt="" className="h-full w-full object-cover object-top" />
+            <>
+              {!bannerLoaded && <div className="shimmer absolute inset-0" />}
+              <img
+                src={card.bannerImage}
+                alt=""
+                className={`h-full w-full object-cover object-top transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0"}`}
+                onLoad={() => setBannerLoaded(true)}
+              />
+            </>
           ) : (
             <div className="h-full w-full" style={{ backgroundColor: bannerColor }}>
               <div
@@ -128,15 +138,19 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         {/* ── 2. Profile Photo ── */}
         <div className="relative z-10 -mt-12 flex justify-center">
           {card.profileImage ? (
-            <Image
-              src={card.profileImage}
-              alt={card.displayName || "Profile"}
-              width={96}
-              height={96}
-              className="h-28 w-28 rounded-full object-cover ring-4"
-              style={{ ["--tw-ring-color" as string]: backgroundColor } as React.CSSProperties}
-              unoptimized
-            />
+            <div className="relative h-28 w-28">
+              {!avatarLoaded && <div className="shimmer absolute inset-0 rounded-full" />}
+              <Image
+                src={card.profileImage}
+                alt={card.displayName || "Profile"}
+                width={112}
+                height={112}
+                className={`h-28 w-28 rounded-full object-cover ring-4 transition-opacity duration-300 ${avatarLoaded ? "opacity-100" : "opacity-0"}`}
+                style={{ ["--tw-ring-color" as string]: backgroundColor } as React.CSSProperties}
+                onLoad={() => setAvatarLoaded(true)}
+                unoptimized
+              />
+            </div>
           ) : (
             <div
               className="flex h-28 w-28 items-center justify-center rounded-full ring-4"
@@ -413,7 +427,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         </p>
       </div>
 
-      {/* Entrance animation keyframes */}
+      {/* Entrance + shimmer animation keyframes */}
       <style jsx>{`
         @keyframes cardFadeIn {
           from {
@@ -424,6 +438,24 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+        .shimmer {
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.04) 25%,
+            rgba(255, 255, 255, 0.12) 50%,
+            rgba(255, 255, 255, 0.04) 75%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 1.5s ease-in-out infinite;
         }
       `}</style>
     </div>
