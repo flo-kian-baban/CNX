@@ -136,7 +136,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         </div>
 
         {/* ── 2. Profile Photo ── */}
-        <div className="relative z-10 -mt-12 flex justify-center">
+        <div className="relative z-10 -mt-[53px] flex justify-center">
           {card.profileImage ? (
             <div className="relative h-28 w-28">
               {!avatarLoaded && <div className="shimmer absolute inset-0 rounded-full" />}
