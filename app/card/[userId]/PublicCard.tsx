@@ -51,37 +51,29 @@ function downloadVCard(card: BusinessCard) {
   const vcf = generateVCard(card);
   const fileName = (card.displayName || "contact").replace(/\s+/g, "_");
 
-  // Use a server endpoint to serve the .vcf file with correct headers.
-  // This works reliably on iOS Safari, Android Chrome, and desktop browsers.
-  // We fetch the endpoint and then use a Blob + object URL (or location assign on iOS).
-  fetch("/api/vcard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ vcf, fileName }),
-  })
-    .then((res) => res.blob())
-    .then((blob) => {
-      const url = URL.createObjectURL(blob);
-      // Use window.location for iOS — it recognises text/vcard and opens Contacts
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        window.location.href = url;
-      } else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${fileName}.vcf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-      // Revoke after a delay so the browser can finish using it
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    })
-    .catch(() => {
-      // Fallback: direct data URI
-      const dataUri = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}`;
-      window.location.href = dataUri;
-    });
+  // Use a hidden form submission to navigate the browser to the server response.
+  // The server returns Content-Type: text/vcard which triggers native contact import
+  // on iOS Safari, Android Chrome, and desktop browsers — no popups, no Blob URLs.
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/api/vcard";
+  form.style.display = "none";
+
+  const vcfInput = document.createElement("input");
+  vcfInput.type = "hidden";
+  vcfInput.name = "vcf";
+  vcfInput.value = vcf;
+  form.appendChild(vcfInput);
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "hidden";
+  nameInput.name = "fileName";
+  nameInput.value = fileName;
+  form.appendChild(nameInput);
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
 }
 
 // ─────────────────────────────────────────────
