@@ -252,7 +252,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
               const content = (
                 <>
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
                     style={{ background: "#ffffff", border: "1px solid rgba(255,255,255,0.10)" }}
                   >
                     {exp.companyLogo ? (
@@ -302,7 +302,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
                   )}
 
                   {isOpen && hasDetails && (
-                    <div className="ml-[52px] mt-1 pb-2">
+                    <div className="ml-[56px] mt-1 pb-2">
                       <p className="text-[11px] leading-relaxed text-gray-500">
                         {exp.description}
                       </p>
