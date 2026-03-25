@@ -49,26 +49,39 @@ function generateVCard(card: BusinessCard): string {
 
 function downloadVCard(card: BusinessCard) {
   const vcf = generateVCard(card);
-  const fileName = `${(card.displayName || "contact").replace(/\s+/g, "_")}.vcf`;
+  const fileName = (card.displayName || "contact").replace(/\s+/g, "_");
 
-  // iOS Safari doesn't support Blob URL downloads or the `download` attribute.
-  // Use a data URI which Safari recognises as a vCard and prompts "Add to Contacts".
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-  if (isIOS) {
-    const dataUri = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}`;
-    window.open(dataUri, "_blank");
-  } else {
-    const blob = new Blob([vcf], { type: "text/vcard;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
+  // Use a server endpoint to serve the .vcf file with correct headers.
+  // This works reliably on iOS Safari, Android Chrome, and desktop browsers.
+  // We fetch the endpoint and then use a Blob + object URL (or location assign on iOS).
+  fetch("/api/vcard", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ vcf, fileName }),
+  })
+    .then((res) => res.blob())
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      // Use window.location for iOS — it recognises text/vcard and opens Contacts
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        window.location.href = url;
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileName}.vcf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      // Revoke after a delay so the browser can finish using it
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    })
+    .catch(() => {
+      // Fallback: direct data URI
+      const dataUri = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}`;
+      window.location.href = dataUri;
+    });
 }
 
 // ─────────────────────────────────────────────
