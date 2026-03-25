@@ -810,6 +810,45 @@ function EditCardContent() {
               )}
             </section>
 
+            {/* ── Section: Education ── */}
+            <section>
+              <SectionHeading title="Education" />
+              <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/5 p-4 space-y-3">
+                <input type="text" value={form.education?.institution ?? ""} placeholder="University or Institution"
+                  className="form-input w-full"
+                  onChange={(e) => setForm((prev) => ({
+                    ...prev,
+                    education: { ...prev.education, institution: e.target.value, degree: prev.education?.degree, fieldOfStudy: prev.education?.fieldOfStudy, logo: prev.education?.logo },
+                  }))} />
+                <input type="text" value={form.education?.degree ?? ""} placeholder="Degree (e.g. Bachelor of Science)"
+                  className="form-input w-full"
+                  onChange={(e) => setForm((prev) => ({
+                    ...prev,
+                    education: { ...prev.education, institution: prev.education?.institution ?? "", degree: e.target.value, fieldOfStudy: prev.education?.fieldOfStudy, logo: prev.education?.logo },
+                  }))} />
+                <input type="text" value={form.education?.fieldOfStudy ?? ""} placeholder="Field of Study (e.g. Computer Science)"
+                  className="form-input w-full"
+                  onChange={(e) => setForm((prev) => ({
+                    ...prev,
+                    education: { ...prev.education, institution: prev.education?.institution ?? "", degree: prev.education?.degree, fieldOfStudy: e.target.value, logo: prev.education?.logo },
+                  }))} />
+                <input type="url" value={form.education?.logo ?? ""} placeholder="https://logo.clearbit.com/university.edu"
+                  className="form-input w-full text-sm"
+                  onChange={(e) => setForm((prev) => ({
+                    ...prev,
+                    education: { ...prev.education, institution: prev.education?.institution ?? "", degree: prev.education?.degree, fieldOfStudy: prev.education?.fieldOfStudy, logo: e.target.value },
+                  }))} />
+                {form.education?.institution && (
+                  <button type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, education: undefined }))}
+                    className="text-xs text-red-400 transition-colors hover:text-red-300"
+                  >
+                    Remove education
+                  </button>
+                )}
+              </div>
+            </section>
+
             {/* ── Section: Appearance ── */}
             <section>
               <SectionHeading title="Appearance" />
