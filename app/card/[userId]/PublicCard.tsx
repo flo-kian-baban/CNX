@@ -366,14 +366,27 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           </div>
         )}
 
-        {/* ── 7. Action Buttons (sticky bottom) ── */}
-        <div className="sticky bottom-0 z-10">
+        {/* Spacer for fixed bottom bar */}
+        {!isPreview && <div className="h-24" />}
+
+        {/* ── 8. Footer ── */}
+        <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "pb-20"}`}>
+          Powered by{" "}
+          <a href="/" className="font-medium text-gray-500 transition-colors hover:text-[#F15928]">
+            CNX
+          </a>
+        </p>
+      </div>
+
+      {/* ── 7. Action Buttons (fixed bottom) ── */}
+      <div className={`${isPreview ? "" : "fixed bottom-0 left-0 right-0 z-50"}`}>
+        <div className="mx-auto max-w-md">
           <div
             className="pointer-events-none h-6"
             style={{ background: `linear-gradient(to bottom, transparent, ${backgroundColor})` }}
           />
           <div
-            className="flex items-stretch gap-3 px-5 pb-5 pt-1"
+            className={`flex items-stretch gap-3 px-5 ${isPreview ? "pb-4 pt-1" : "pb-5 pt-1"}`}
             style={{ backgroundColor }}
           >
           {hasPhone && (
@@ -417,14 +430,6 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           )}
           </div>
         </div>
-
-        {/* ── 8. Footer ── */}
-        <p className={`text-center text-[10px] text-gray-700 ${isPreview ? "pb-2" : "pb-6"}`}>
-          Powered by{" "}
-          <a href="/" className="font-medium text-gray-500 transition-colors hover:text-[#F15928]">
-            CNX
-          </a>
-        </p>
       </div>
 
       {/* Entrance + shimmer animation keyframes */}
