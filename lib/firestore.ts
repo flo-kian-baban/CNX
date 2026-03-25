@@ -3,6 +3,8 @@ import {
   setDoc,
   getDoc,
   deleteDoc,
+  getDocs,
+  collection,
   serverTimestamp,
   runTransaction,
 } from "firebase/firestore";
@@ -163,4 +165,65 @@ export async function getSlugOwner(slug: string): Promise<string | null> {
   if (!snapshot.exists()) return null;
   const data = snapshot.data();
   return typeof data?.userId === "string" ? data.userId : null;
+}
+
+// ─────────────────────────────────────────────
+// Admin helpers (super-admin only)
+// ─────────────────────────────────────────────
+
+export interface CardWithId extends BusinessCard {
+  /** The Firestore document ID (= owner UID). */
+  id: string;
+}
+
+export interface UserWithId extends UserProfile {
+  /** The Firestore document ID (= UID). */
+  uid: string;
+}
+
+/** Fetches every card from the `cards` collection. */
+export async function getAllCards(): Promise<CardWithId[]> {
+  const snapshot = await getDocs(collection(db, "cards"));
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as CardWithId));
+}
+
+/** Fetches every user profile from the `users` collection. */
+export async function getAllUsers(): Promise<UserWithId[]> {
+  const snapshot = await getDocs(collection(db, "users"));
+  return snapshot.docs.map((d) => ({ uid: d.id, ...d.data() } as UserWithId));
+}
+
+/**
+ * Deletes a card and its associated slug (if any).
+ */
+export async function deleteCard(uid: string): Promise<void> {
+  // Read card to find slug first
+  const card = await getBusinessCard(uid);
+  if (card?.slug) {
+    await deleteDoc(doc(db, "slugs", card.slug));
+  }
+  await deleteDoc(doc(db, "cards", uid));
+}
+
+/**
+ * Reassigns a card from one UID to another.
+ * Copies the full card document, re-maps any slug, and deletes the source.
+ */
+export async function reassignCard(fromUid: string, toUid: string): Promise<void> {
+  const card = await getBusinessCard(fromUid);
+  if (!card) throw new Error("Source card not found.");
+
+  // Write to new UID
+  await setDoc(doc(db, "cards", toUid), {
+    ...deepClean(card),
+    updatedAt: serverTimestamp(),
+  });
+
+  // Re-map slug if present
+  if (card.slug) {
+    await setDoc(doc(db, "slugs", card.slug), { userId: toUid });
+  }
+
+  // Delete original
+  await deleteDoc(doc(db, "cards", fromUid));
 }

@@ -4,7 +4,9 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { isAdmin } from "@/lib/admin";
 import {
   getBusinessCard,
   updateBusinessCard,
@@ -17,6 +19,7 @@ import type { BusinessCard, CustomLink, SocialLink, Experience, Education } from
 import PublicCard from "@/app/card/[userId]/PublicCard";
 import { useToast } from "@/components/Toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminNavbar from "@/components/AdminNavbar";
 
 const QRCodeSVG = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -197,8 +200,13 @@ function PlatformIcon({ platform }: { platform: SocialLink["platform"] }) {
 // ─────────────────────────────────────────────
 
 function EditCardContent() {
-  const { user, logout, cardCache, cardLoading: authCardLoading } = useAuth();
+  const { user, cardCache, cardLoading: authCardLoading } = useAuth();
   const { toast, showToast } = useToast();
+  const searchParams = useSearchParams();
+
+  // Admin override: when ?uid= is present and the user is admin, edit that UID's card
+  const adminUidOverride = isAdmin(user) ? searchParams.get("uid") : null;
+  const targetUid = adminUidOverride ?? user?.uid ?? "";
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [savedForm, setSavedForm] = useState<FormState>(EMPTY_FORM);
@@ -256,9 +264,10 @@ function EditCardContent() {
     setSavedForm(loaded);
   }, []);
 
-  // Use cardCache for instant hydration if available
+  // Use cardCache for instant hydration (only when NOT admin-overriding)
   const hydratedFromCache = useRef(false);
   useEffect(() => {
+    if (adminUidOverride) return; // skip cache for admin override
     if (cardCache && !hydratedFromCache.current) {
       hydratedFromCache.current = true;
       hydrateForm(cardCache);
@@ -270,24 +279,25 @@ function EditCardContent() {
       if (!dismissed) setShowWelcome(true);
       setLoading(false);
     }
-  }, [cardCache, authCardLoading, hydrateForm]);
+  }, [cardCache, authCardLoading, hydrateForm, adminUidOverride]);
 
-  // Background fetch for freshness (only when cache missed)
+  // Background fetch for freshness (or admin override load)
   useEffect(() => {
-    if (!user || hydratedFromCache.current) return;
+    if (!targetUid) return;
+    if (!adminUidOverride && hydratedFromCache.current) return;
     (async () => {
       try {
-        const card = await getBusinessCard(user.uid);
+        const card = await getBusinessCard(targetUid);
         if (card) {
           hydrateForm(card);
-        } else {
+        } else if (!adminUidOverride) {
           const dismissed = localStorage.getItem("cnx-welcome-dismissed");
           if (!dismissed) setShowWelcome(true);
         }
       } catch (err) { console.error("Failed to load card:", err); }
       finally { setLoading(false); }
     })();
-  }, [user, hydrateForm]);
+  }, [targetUid, adminUidOverride, hydrateForm]);
 
   // Field helpers
   const updateField = useCallback((field: keyof Omit<FormState, "customLinks" | "socialLinks">, value: string) => {
@@ -343,7 +353,7 @@ function EditCardContent() {
     if (!file || !user) return;
     setUploadingProfile(true);
     try {
-      const url = await uploadProfileImage(user.uid, file);
+      const url = await uploadProfileImage(targetUid, file);
       setForm((prev) => ({ ...prev, profileImage: url }));
       showToast("Profile photo uploaded!", "success");
     } catch (err) {
@@ -356,7 +366,7 @@ function EditCardContent() {
     if (!file || !user) return;
     setUploadingBanner(true);
     try {
-      const url = await uploadBannerImage(user.uid, file);
+      const url = await uploadBannerImage(targetUid, file);
       setForm((prev) => ({ ...prev, bannerImage: url }));
       showToast("Banner uploaded!", "success");
     } catch (err) {
@@ -366,7 +376,7 @@ function EditCardContent() {
 
   // Save
   const handleSave = async () => {
-    if (!user) return;
+    if (!targetUid) return;
     const validationErrors = validate(form);
     setErrors(validationErrors);
     if (hasErrors(validationErrors)) return;
@@ -374,28 +384,31 @@ function EditCardContent() {
     try {
       const card = formToCard(form);
       const { updatedAt: _, ...cardData } = card;
-      await updateBusinessCard(user.uid, cardData);
+      await updateBusinessCard(targetUid, cardData);
       const newSlug = form.slug.trim();
       const oldSlug = originalSlugRef.current;
-      if (newSlug) {
-        try {
-          await updateSlug(newSlug, user.uid);
-          if (oldSlug && oldSlug !== newSlug) await deleteSlug(oldSlug, user.uid);
-          originalSlugRef.current = newSlug;
-        } catch (slugErr) {
-          if (slugErr instanceof Error && slugErr.message === SLUG_TAKEN_ERROR) {
-            setErrors((prev) => ({ ...prev, slug: SLUG_TAKEN_ERROR }));
-            showToast("Card saved, but the slug could not be claimed.", "error");
-            setSaving(false);
-            isNewCardRef.current = false;
-            setSavedForm({ ...form, slug: savedForm.slug });
-            return;
+      // Slug management is admin-only
+      if (adminUidOverride) {
+        if (newSlug) {
+          try {
+            await updateSlug(newSlug, targetUid);
+            if (oldSlug && oldSlug !== newSlug) await deleteSlug(oldSlug, targetUid);
+            originalSlugRef.current = newSlug;
+          } catch (slugErr) {
+            if (slugErr instanceof Error && slugErr.message === SLUG_TAKEN_ERROR) {
+              setErrors((prev) => ({ ...prev, slug: SLUG_TAKEN_ERROR }));
+              showToast("Card saved, but the slug could not be claimed.", "error");
+              setSaving(false);
+              isNewCardRef.current = false;
+              setSavedForm({ ...form, slug: savedForm.slug });
+              return;
+            }
+            throw slugErr;
           }
-          throw slugErr;
+        } else if (oldSlug) {
+          await deleteSlug(oldSlug, targetUid);
+          originalSlugRef.current = "";
         }
-      } else if (oldSlug) {
-        await deleteSlug(oldSlug, user.uid);
-        originalSlugRef.current = "";
       }
       isNewCardRef.current = false;
       setSavedForm(form);
@@ -429,18 +442,13 @@ function EditCardContent() {
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
   }, []);
 
-  const sharePath = form.slug.trim() ? `/c/${form.slug.trim()}` : user ? `/card/${user.uid}` : "";
+  const sharePath = form.slug.trim() ? `/c/${form.slug.trim()}` : targetUid ? `/card/${targetUid}` : "";
   const shareUrl = origin && sharePath ? `${origin}${sharePath}` : "";
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 pb-20">
-        <nav className="sticky top-0 z-30 border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-[#F15928]">.</span></h1>
-            <div className="h-7 w-20 animate-pulse rounded-lg bg-white/5" />
-          </div>
-        </nav>
+        <AdminNavbar />
         <main className="mx-auto max-w-7xl px-6 py-10">
           <div className="max-w-lg space-y-8">
             {/* Skeleton: completeness bar */}
@@ -469,32 +477,26 @@ function EditCardContent() {
   return (
     <div className="min-h-screen bg-gray-950 pb-20">
       {/* Nav */}
-      <nav className="sticky top-0 z-30 border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-black tracking-widest text-white">CNX<span className="text-[#F15928]">.</span></h1>
-          <div className="flex items-center gap-3">
-            {sharePath && (
-              <a href={sharePath} target="_blank" rel="noopener noreferrer"
-                className="hidden text-sm font-medium text-gray-400 transition-colors hover:text-white sm:block">
-                View Card ↗
-              </a>
-            )}
-            <Link href="/dashboard" className="hidden text-sm font-medium text-gray-400 transition-colors hover:text-white sm:block">
-              Dashboard
-            </Link>
-            {user?.photoURL && (
-              <Image src={user.photoURL} alt={user.displayName ?? "User"} width={28} height={28}
-                className="rounded-full ring-2 ring-[#F15928]/50" referrerPolicy="no-referrer" unoptimized />
-            )}
-            <button onClick={logout}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors hover:border-white/20 hover:bg-white/5 hover:text-white">
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AdminNavbar />
 
       <main className="card-enter mx-auto max-w-7xl px-6 py-10">
+        {/* Admin editing banner */}
+        {adminUidOverride && (
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#F15928]/20 bg-[#F15928]/[0.06] px-5 py-3">
+            <div className="flex items-center gap-3">
+              <svg className="h-4 w-4 text-[#F15928]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              <p className="text-sm font-medium text-[#F15928]">
+                Editing as admin — Card ID: <span className="font-mono text-xs text-[#F15928]/70">{adminUidOverride}</span>
+              </p>
+            </div>
+            <Link href="/admin" className="text-xs font-medium text-[#F15928]/60 transition-colors hover:text-[#F15928]">
+              ← Back to Admin
+            </Link>
+          </div>
+        )}
         {/* Welcome banner */}
         {showWelcome && (
           <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#F15928]/20 bg-[#F15928]/10 px-6 py-4">
@@ -906,11 +908,21 @@ function EditCardContent() {
             <section>
               <SectionHeading title="Your Public URL" />
               <div className="mt-4 space-y-5 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
-                <FieldGroup label="Slug" htmlFor="slug" error={errors.slug}>
-                  <input id="slug" type="text" value={form.slug} onChange={(e) => updateField("slug", e.target.value.toLowerCase())}
-                    placeholder="jane-smith" className={`form-input ${errors.slug ? "ring-red-500/50" : ""}`}/>
-                  <p className="mt-1.5 text-xs text-gray-500">cnx.app/c/<span className="text-[#F15928]">{form.slug.trim() || "your-slug"}</span></p>
-                </FieldGroup>
+                {adminUidOverride ? (
+                  <FieldGroup label="Slug" htmlFor="slug" error={errors.slug}>
+                    <input id="slug" type="text" value={form.slug} onChange={(e) => updateField("slug", e.target.value.toLowerCase())}
+                      placeholder="jane-smith" className={`form-input ${errors.slug ? "ring-red-500/50" : ""}`}/>
+                    <p className="mt-1.5 text-xs text-gray-500">cnx.app/c/<span className="text-[#F15928]">{form.slug.trim() || "your-slug"}</span></p>
+                  </FieldGroup>
+                ) : form.slug ? (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-400">Your Card URL</label>
+                    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                      <span className="text-sm text-gray-500">cnx.app/c/</span>
+                      <span className="text-sm font-medium text-[#F15928]">{form.slug}</span>
+                    </div>
+                  </div>
+                ) : null}
                 {shareUrl && (
                   <button onClick={handleDownloadQR} type="button"
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-[#F15928]/30 hover:bg-[#F15928]/10 hover:text-white">

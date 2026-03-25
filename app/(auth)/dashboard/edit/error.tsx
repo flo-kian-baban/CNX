@@ -40,10 +40,10 @@ export default function EditCardError({
             Try again
           </button>
           <a
-            href="/dashboard"
+            href="/dashboard/edit"
             className="rounded-lg bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-white"
           >
-            Back to dashboard
+            Back to editor
           </a>
         </div>
       </div>
