@@ -242,44 +242,64 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             <p className="mb-3 mt-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
               Experience
             </p>
-            {experiences.map((exp) => (
-              <div key={exp.id} className="mb-4 flex gap-3">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
-                  style={{
-                    background: "#ffffff",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                  }}
-                >
-                  {exp.companyLogo ? (
-                    <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-contain p-1" />
-                  ) : (
-                    (exp.company || "?")[0].toUpperCase()
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white">{exp.role}</p>
-                  <p className="text-xs text-gray-400">{exp.company}</p>
-                  <p className="mt-0.5 text-[10px] text-gray-600">
-                    {exp.startDate}{exp.current ? " – Present" : exp.endDate ? ` – ${exp.endDate}` : ""}
-                  </p>
-                  {exp.description && (
-                    <p className={`mt-1 text-[11px] leading-relaxed text-gray-500 ${!expandedExp.has(exp.id) ? "line-clamp-2" : ""}`}>
-                      {exp.description}
-                      {exp.description.length > 100 && !expandedExp.has(exp.id) && (
-                        <button
-                          onClick={() => setExpandedExp((prev) => new Set(prev).add(exp.id))}
-                          className="ml-1 font-medium"
-                          style={{ color: accentColor }}
-                        >
-                          more
-                        </button>
+            {experiences.map((exp) => {
+              const isOpen = expandedExp.has(exp.id);
+              const dateStr = exp.startDate
+                ? `${exp.startDate}${exp.current ? " – Present" : exp.endDate ? ` – ${exp.endDate}` : ""}`
+                : exp.current ? "Present" : "";
+              return (
+                <div key={exp.id} className="mb-2">
+                  {/* Collapsed header — always visible */}
+                  <button
+                    onClick={() =>
+                      setExpandedExp((prev) => {
+                        const next = new Set(prev);
+                        next.has(exp.id) ? next.delete(exp.id) : next.add(exp.id);
+                        return next;
+                      })
+                    }
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white/5"
+                  >
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
+                      style={{ background: "#ffffff", border: "1px solid rgba(255,255,255,0.10)" }}
+                    >
+                      {exp.companyLogo ? (
+                        <img src={exp.companyLogo} alt={exp.company} className="h-full w-full object-contain p-1" />
+                      ) : (
+                        (exp.company || "?")[0].toUpperCase()
                       )}
-                    </p>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white">{exp.role || exp.company}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="truncate">{exp.role ? exp.company : ""}</span>
+                        {exp.role && exp.company && dateStr && <span className="text-gray-600">·</span>}
+                        {dateStr && <span className="shrink-0 text-gray-500">{dateStr}</span>}
+                      </p>
+                    </div>
+                    {/* Chevron */}
+                    <svg
+                      className={`h-4 w-4 shrink-0 text-gray-600 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Expanded details */}
+                  {isOpen && (exp.description) && (
+                    <div className="ml-[52px] mt-1 pb-2">
+                      {exp.description && (
+                        <p className="text-[11px] leading-relaxed text-gray-500">
+                          {exp.description}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
