@@ -117,6 +117,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             <>
               {!bannerLoaded && <div className="shimmer absolute inset-0" />}
               <img
+                ref={(el) => { if (el?.complete) setBannerLoaded(true); }}
                 src={card.bannerImage}
                 alt=""
                 className={`h-full w-full object-cover object-top transition-opacity duration-300 ${bannerLoaded ? "opacity-100" : "opacity-0"}`}
@@ -141,6 +142,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             <div className="relative h-28 w-28">
               {!avatarLoaded && <div className="shimmer absolute inset-0 rounded-full" />}
               <Image
+                ref={(el) => { if ((el as unknown as HTMLImageElement)?.complete) setAvatarLoaded(true); }}
                 src={card.profileImage}
                 alt={card.displayName || "Profile"}
                 width={112}
