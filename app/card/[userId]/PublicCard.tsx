@@ -49,15 +49,26 @@ function generateVCard(card: BusinessCard): string {
 
 function downloadVCard(card: BusinessCard) {
   const vcf = generateVCard(card);
-  const blob = new Blob([vcf], { type: "text/vcard;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${(card.displayName || "contact").replace(/\s+/g, "_")}.vcf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const fileName = `${(card.displayName || "contact").replace(/\s+/g, "_")}.vcf`;
+
+  // iOS Safari doesn't support Blob URL downloads or the `download` attribute.
+  // Use a data URI which Safari recognises as a vCard and prompts "Add to Contacts".
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  if (isIOS) {
+    const dataUri = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcf)}`;
+    window.open(dataUri, "_blank");
+  } else {
+    const blob = new Blob([vcf], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 }
 
 // ─────────────────────────────────────────────
