@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "text/x-vcard; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${safeName}.vcf"`,
+        "Content-Disposition": `inline; filename="${safeName}.vcf"`,
         "Cache-Control": "no-store",
       },
     });
