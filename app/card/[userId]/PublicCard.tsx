@@ -108,7 +108,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
 
   return (
     <div
-      className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md overflow-x-hidden`}
+      className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md`}
       style={{
         backgroundColor,
         animation: isPreview ? undefined : "cardFadeIn 300ms ease-out both",
@@ -267,7 +267,45 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           ) : null}
         </div>
 
-        {/* ── 5. Experience ── */}
+        {/* ── 5. Custom Links ── */}
+        {(activeCustomLinks.length > 0 || isPreview) && (
+          <div className="mt-4 px-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
+              Links
+            </p>
+            {activeCustomLinks.length > 0 ? (
+              <div className="space-y-2">
+                {activeCustomLinks.map((link, i) => (
+                  <a
+                    key={`${link.label}-${i}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex h-11 items-center justify-between rounded-xl px-4 text-sm text-white transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+                    style={{
+                      background: `${accentColor}26`,
+                      border: `1px solid ${accentColor}40`,
+                    }}
+                  >
+                    <span className="truncate">{link.label || link.url}</span>
+                    <svg className="ml-2 h-3.5 w-3.5 shrink-0 text-gray-400 transition-colors group-hover:text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="flex h-11 items-center justify-center rounded-xl text-[11px] text-gray-700"
+                style={{ border: "1px dashed rgba(255,255,255,0.07)" }}
+              >
+                Your links will appear here
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 6. Experience ── */}
         {experiences.length > 0 && (
           <div className="mt-5 px-5">
             <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }} />
@@ -345,75 +383,54 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
             })}
           </div>
         )}
-        {/* ── 5b. Education ── */}
+        {/* ── 6b. Education ── */}
         {card.education?.institution && (
           <div className="mt-5 px-5">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
               Education
             </p>
-            <div className="flex flex-col items-center rounded-2xl px-4 py-5"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            <div
+              className="relative overflow-hidden rounded-2xl px-5 py-6"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
             >
-              {card.education.logo ? (
-                <img
-                  src={card.education.logo}
-                  alt={card.education.institution}
-                  className="mb-3 h-14 w-14 rounded-xl bg-white object-contain p-1.5"
-                />
-              ) : (
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-white/10">
-                  <svg className="h-7 w-7 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
-                  </svg>
-                </div>
-              )}
-              <p className="text-center text-sm font-semibold text-gray-200">
-                {card.education.institution}
-              </p>
-              {(card.education.fieldOfStudy || card.education.degree) && (
-                <p className="mt-1 text-center text-xs text-gray-500">
-                  {[card.education.degree, card.education.fieldOfStudy].filter(Boolean).join(" · ")}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* ── 6. Custom Links ── */}
-        {(activeCustomLinks.length > 0 || isPreview) && (
-          <div className="mt-4 px-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
-              Links
-            </p>
-            {activeCustomLinks.length > 0 ? (
-              <div className="space-y-2">
-                {activeCustomLinks.map((link, i) => (
-                  <a
-                    key={`${link.label}-${i}`}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex h-11 items-center justify-between rounded-xl px-4 text-sm text-gray-300 transition-all duration-150 hover:text-white active:scale-[0.98]"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <span className="truncate">{link.label || link.url}</span>
-                    <svg className="ml-2 h-3.5 w-3.5 shrink-0 text-gray-600 transition-colors group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+              <div className="flex items-center gap-4">
+                {/* Logo */}
+                {card.education.logo ? (
+                  <img
+                    src={card.education.logo}
+                    alt={card.education.institution}
+                    className="h-16 w-16 shrink-0 rounded-2xl bg-white object-contain p-2"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+                    <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
                     </svg>
-                  </a>
-                ))}
+                  </div>
+                )}
+
+                {/* Text */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold leading-snug text-gray-100">
+                    {card.education.institution}
+                  </p>
+                  {card.education.degree && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      {card.education.degree}
+                    </p>
+                  )}
+                  {card.education.fieldOfStudy && (
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {card.education.fieldOfStudy}
+                    </p>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div
-                className="flex h-11 items-center justify-center rounded-xl text-[11px] text-gray-700"
-                style={{ border: "1px dashed rgba(255,255,255,0.07)" }}
-              >
-                Your links will appear here
-              </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -422,7 +439,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
       </div>
 
       {/* ── Action Buttons + Footer (fixed bottom) ── */}
-      <div className={`${isPreview ? "" : "fixed bottom-0 left-0 right-0 z-50"}`}>
+      <div className={`${isPreview ? "sticky bottom-0" : "fixed bottom-0 left-0 right-0"} z-50`}>
         <div className="mx-auto max-w-md">
           <div
             className="pointer-events-none h-6"
