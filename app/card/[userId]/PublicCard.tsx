@@ -247,8 +247,8 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-semibold text-gray-400"
                   style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.12)",
+                    border: "1px solid rgba(255,255,255,0.10)",
                   }}
                 >
                   {exp.companyLogo ? (
