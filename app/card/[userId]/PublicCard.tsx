@@ -90,7 +90,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
 
   return (
     <div
-      className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md overflow-hidden`}
+      className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md overflow-x-hidden`}
       style={{
         backgroundColor,
         animation: isPreview ? undefined : "cardFadeIn 300ms ease-out both",
@@ -133,13 +133,13 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
               alt={card.displayName || "Profile"}
               width={96}
               height={96}
-              className="h-24 w-24 rounded-full object-cover ring-4"
+              className="h-28 w-28 rounded-full object-cover ring-4"
               style={{ ["--tw-ring-color" as string]: backgroundColor } as React.CSSProperties}
               unoptimized
             />
           ) : (
             <div
-              className="flex h-24 w-24 items-center justify-center rounded-full ring-4"
+              className="flex h-28 w-28 items-center justify-center rounded-full ring-4"
               style={{
                 background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
                 ["--tw-ring-color" as string]: backgroundColor,
