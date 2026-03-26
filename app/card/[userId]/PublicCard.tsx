@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { BusinessCard, SocialLink } from "@/types/user";
+import { INTERESTS_MAP } from "@/data/interests";
 
 // ─────────────────────────────────────────────
 // URL safety
@@ -109,10 +110,7 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
   return (
     <div
       className={`${isPreview ? "" : "min-h-screen"} relative mx-auto max-w-md`}
-      style={{
-        backgroundColor,
-        animation: isPreview ? undefined : "cardFadeIn 300ms ease-out both",
-      }}
+      style={{ backgroundColor }}
     >
       {/* Ambient radial glow */}
       {!isPreview && (
@@ -124,8 +122,8 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
         />
       )}
 
-      {/* All content above the glow */}
-      <div className="relative z-[1]">
+      {/* All content above the glow — animation lives here so fixed positioning works on the action bar */}
+      <div className={`relative z-[1] ${isPreview ? "" : "card-fade-in"}`}>
 
         {/* ── 1. Banner ── */}
         <div className="relative h-28 w-full overflow-hidden">
@@ -434,11 +432,40 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
           </div>
         )}
 
+        {/* ── 7. Interests ── */}
+        {(card.interests ?? []).length > 0 && (
+          <div className="mt-5 px-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-600">
+              Interests
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(card.interests ?? []).map((id) => {
+                const item = INTERESTS_MAP[id];
+                if (!item) return null;
+                const Icon = item.icon;
+                return (
+                  <span
+                    key={id}
+                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: accentColor }} />
+                    {item.label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Spacer for fixed bottom bar */}
         {!isPreview && <div className="h-32" />}
       </div>
 
-      {/* ── Action Buttons + Footer (fixed bottom) ── */}
+      {/* ── Action Buttons + Footer ── */}
       <div className={`${isPreview ? "sticky bottom-0" : "fixed bottom-0 left-0 right-0"} z-50`}>
         <div className="mx-auto max-w-md">
           <div
@@ -459,62 +486,52 @@ export default function PublicCard({ card, isPreview }: PublicCardProps) {
               className="flex items-stretch gap-3 px-5 pb-3 pt-1"
               style={{ paddingBottom: isPreview ? "12px" : "calc(12px + env(safe-area-inset-bottom, 8px))" }}
             >
-            {hasPhone && (
-              <a
-                href={`tel:${card.phone}`}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-                aria-label="Call"
-              >
-                <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                </svg>
-              </a>
-            )}
+              {hasPhone && (
+                <a
+                  href={`tel:${card.phone}`}
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  aria-label="Call"
+                >
+                  <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                  </svg>
+                </a>
+              )}
 
-            <button
-              onClick={() => downloadVCard(card)}
-              className="flex h-12 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98]"
-              style={{ backgroundColor: accentColor }}
-            >
-              Save Contact
-            </button>
-
-            {hasEmail && (
-              <a
-                href={`mailto:${card.email}`}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-                aria-label="Email"
+              <button
+                onClick={() => downloadVCard(card)}
+                className="flex h-12 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+                style={{ backgroundColor: accentColor }}
               >
-                <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                </svg>
-              </a>
-            )}
+                Save Contact
+              </button>
+
+              {hasEmail && (
+                <a
+                  href={`mailto:${card.email}`}
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-gray-300 transition-all duration-200 hover:text-white active:scale-95"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  aria-label="Email"
+                >
+                  <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Entrance + shimmer animation keyframes */}
+      {/* Shimmer animation keyframes */}
       <style jsx>{`
-        @keyframes cardFadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
         @keyframes shimmer {
           0% {
             background-position: -200% 0;
