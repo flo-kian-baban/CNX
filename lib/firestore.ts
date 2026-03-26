@@ -227,3 +227,11 @@ export async function reassignCard(fromUid: string, toUid: string): Promise<void
   // Delete original
   await deleteDoc(doc(db, "cards", fromUid));
 }
+
+/**
+ * Deletes a user profile from the `users` collection.
+ * Does NOT delete associated cards — handle that separately if needed.
+ */
+export async function deleteUser(uid: string): Promise<void> {
+  await deleteDoc(doc(db, "users", uid));
+}

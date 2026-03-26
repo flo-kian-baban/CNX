@@ -1,10 +1,21 @@
-import { redirect } from "next/navigation";
+import Header from "@/components/landing/sections/Header";
+import HeroSection from "@/components/landing/sections/HeroSection";
+import MarqueeSection from "@/components/landing/sections/MarqueeSection";
+import FeaturesSection from "@/components/landing/sections/FeaturesSection";
+import HowItWorksSection from "@/components/landing/sections/HowItWorksSection";
+import FAQSection from "@/components/landing/sections/FAQSection";
+import Footer from "@/components/landing/sections/Footer";
 
-/**
- * Root page — server-side redirect to /dashboard/edit.
- * ProtectedRoute on the dashboard handles unauthenticated users.
- * Zero JS, instant redirect.
- */
-export default function RootPage() {
-  redirect("/dashboard/edit");
+export default function Home() {
+  return (
+    <main className="relative min-h-screen selection:bg-accent selection:text-white">
+      <Header />
+      <HeroSection />
+      <MarqueeSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <FAQSection />
+      <Footer />
+    </main>
+  );
 }

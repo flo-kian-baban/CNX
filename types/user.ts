@@ -78,6 +78,7 @@ export interface BusinessCard {
   customLinks: CustomLink[];
   experience?: Experience[];
   education?: Education;
+  interests?: string[];
   slug?: string;
   cardTheme?: {
     backgroundColor: string;

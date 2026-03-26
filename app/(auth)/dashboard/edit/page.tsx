@@ -16,6 +16,7 @@ import {
 } from "@/lib/firestore";
 import { uploadProfileImage, uploadBannerImage } from "@/lib/storage";
 import type { BusinessCard, CustomLink, SocialLink, Experience, Education } from "@/types/user";
+import { INTERESTS_LIBRARY, INTERESTS_MAP, type Interest } from "@/data/interests";
 import PublicCard from "@/app/card/[userId]/PublicCard";
 import { useToast } from "@/components/Toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -72,6 +73,7 @@ interface FormState {
   customLinks: CustomLink[];
   experience: Experience[];
   education?: Education;
+  interests: string[];
   slug: string;
   backgroundColor: string;
   accentColor: string;
@@ -93,7 +95,7 @@ function emptySocialLinks(): Record<SocialLink["platform"], string> {
 const EMPTY_FORM: FormState = {
   displayName: "", title: "", bio: "", location: "",
   phone: "", email: "", profileImage: "", bannerImage: "",
-  socialLinks: emptySocialLinks(), customLinks: [], experience: [], education: undefined, slug: "",
+  socialLinks: emptySocialLinks(), customLinks: [], experience: [], education: undefined, interests: [], slug: "",
   backgroundColor: "#030712", accentColor: "#F15928", bannerColor: "#F15928",
 };
 
@@ -168,6 +170,7 @@ function formToCard(form: FormState): BusinessCard {
     socialLinks, customLinks: form.customLinks,
     experience: form.experience.length > 0 ? form.experience : undefined,
     education: form.education?.institution ? form.education : undefined,
+    interests: form.interests.length > 0 ? form.interests : undefined,
     slug: form.slug || undefined,
     cardTheme: { backgroundColor: form.backgroundColor, accentColor: form.accentColor, bannerColor: form.bannerColor },
     updatedAt: null as unknown as BusinessCard["updatedAt"],
@@ -255,6 +258,7 @@ function EditCardContent() {
       socialLinks: socials, customLinks: card.customLinks ?? [],
       experience: card.experience ?? [],
       education: card.education ?? undefined,
+      interests: card.interests ?? [],
       slug: loadedSlug,
       backgroundColor: card.cardTheme?.backgroundColor ?? "#030712",
       accentColor: card.cardTheme?.accentColor ?? "#F15928",
@@ -851,6 +855,12 @@ function EditCardContent() {
               </div>
             </section>
 
+            {/* ── Section: Interests ── */}
+            <InterestsSection
+              interests={form.interests}
+              onChange={(interests) => setForm((prev) => ({ ...prev, interests }))}
+            />
+
             {/* ── Section: Appearance ── */}
             <section>
               <SectionHeading title="Appearance" />
@@ -1049,5 +1059,171 @@ function FieldGroup({ label, htmlFor, required, error, children }: {
       {children}
       {error && <p id={`${htmlFor}-error`} className="mt-1.5 text-xs text-red-400">{error}</p>}
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Interests Section (editor)
+// ─────────────────────────────────────────────
+
+const MAX_INTERESTS = 3;
+
+function InterestsSection({ interests, onChange }: {
+  interests: string[];
+  onChange: (interests: string[]) => void;
+}) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selectedItems = interests
+    .map((id) => INTERESTS_MAP[id])
+    .filter(Boolean) as Interest[];
+
+  const removeInterest = (id: string) => {
+    onChange(interests.filter((i) => i !== id));
+  };
+
+  const toggleInterest = (id: string) => {
+    if (interests.includes(id)) {
+      onChange(interests.filter((i) => i !== id));
+    } else if (interests.length < MAX_INTERESTS) {
+      onChange([...interests, id]);
+      // Auto-close if we hit the max
+      if (interests.length + 1 >= MAX_INTERESTS) {
+        setDropdownOpen(false);
+        setSearch("");
+      }
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+        setSearch("");
+      }
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") { setDropdownOpen(false); setSearch(""); }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscape);
+      };
+    }
+  }, [dropdownOpen]);
+
+  const filtered = search.trim()
+    ? INTERESTS_LIBRARY.filter((i) =>
+        i.label.toLowerCase().includes(search.toLowerCase())
+      )
+    : INTERESTS_LIBRARY;
+
+  const isFull = interests.length >= MAX_INTERESTS;
+
+  return (
+    <section className={dropdownOpen ? "relative z-40" : ""}>
+      <SectionHeading title="Interests" />
+      <div ref={containerRef} className="mt-4 overflow-visible rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
+        {/* Selected chips */}
+        {selectedItems.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {selectedItems.map((item) => (
+              <span
+                key={item.id}
+                className="flex items-center gap-2 rounded-full border border-[#F15928]/30 bg-[#F15928]/10 px-3 py-1.5 text-sm font-medium text-white"
+              >
+                <item.icon className="h-4 w-4 shrink-0 text-[#F15928]" />
+                {item.label}
+                <button
+                  type="button"
+                  onClick={() => removeInterest(item.id)}
+                  className="ml-0.5 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-red-400"
+                >
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Search input (always visible if not full) */}
+        {!isFull ? (
+          <div className="relative">
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={search}
+              onFocus={() => setDropdownOpen(true)}
+              onChange={(e) => { setSearch(e.target.value); setDropdownOpen(true); }}
+              placeholder={`Search interests… (${interests.length}/${MAX_INTERESTS})`}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#F15928]/40 focus:ring-1 focus:ring-[#F15928]/20"
+            />
+            {/* Dropdown list */}
+            {dropdownOpen && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-gray-950 shadow-2xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#F15928]/40 hover:[&::-webkit-scrollbar-thumb]:bg-[#F15928]/70">
+            {filtered.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-gray-500">No interests match &quot;{search}&quot;</p>
+            ) : (
+              <div className="py-1">
+                {filtered.slice(0, 50).map((item) => {
+                  const isSelected = interests.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => toggleInterest(item.id)}
+                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                        isSelected
+                          ? "bg-[#F15928]/10 text-white"
+                          : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 truncate text-sm">{item.label}</span>
+                      {isSelected && (
+                        <svg className="h-4 w-4 shrink-0 text-[#F15928]" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+                {filtered.length > 50 && (
+                  <p className="px-4 py-2 text-center text-[11px] text-gray-600">
+                    Type to narrow down {filtered.length - 50} more results…
+                  </p>
+                )}
+              </div>
+            )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500">
+            Maximum {MAX_INTERESTS} interests selected
+          </p>
+        )}
+
+        {interests.length === 0 && (
+          <p className="mt-2 text-xs text-gray-600">
+            Pick up to {MAX_INTERESTS} interests to show on your card
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
